@@ -77,11 +77,23 @@ CREATE TABLE character_events (
     FOREIGN KEY (char_id) REFERENCES characters(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- token_blocklist 테이블
+CREATE TABLE token_blocklist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    jti VARCHAR(36) NOT NULL,
+    token_type VARCHAR(10) NOT NULL DEFAULT 'access',
+    user_id INT NOT NULL,
+    revoked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 인덱스 생성
 CREATE INDEX idx_user_progress_user ON user_progress(user_id);
 CREATE INDEX idx_user_progress_char ON user_progress(char_name);
 CREATE INDEX idx_chat_logs_user ON chat_logs(user_id);
 CREATE INDEX idx_chat_logs_char ON chat_logs(char_name);
 CREATE INDEX idx_character_events_char ON character_events(char_id);
+CREATE INDEX idx_token_blocklist_jti ON token_blocklist(jti);
 
 SELECT 'Database initialized successfully!' AS message;

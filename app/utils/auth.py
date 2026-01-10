@@ -23,6 +23,7 @@ def create_token(user_id: int, username: str) -> str:
     payload = {
         'user_id': user_id,
         'username': username,
+        'jti': str(uuid.uuid4()),  # 고유 식별자(JTI) 추가
         'exp': datetime.utcnow() + timedelta(days=current_app.config['JWT_EXPIRES_IN_DAYS'])
     }
     token = jwt.encode(
@@ -49,12 +50,9 @@ def decode_token(token: str) -> dict:
 
 
 def token_required(f):
-    """JWT 인증 데코레이터"""
-
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
             try:
@@ -67,10 +65,18 @@ def token_required(f):
 
         try:
             payload = decode_token(token)
-            request.current_user = payload
-        except ValueError as e:
+
+            # [추가됨] 블랙리스트 확인 로직
+            jti = payload.get('jti')
+            if jti:
+                blocked = TokenBlocklist.query.filter_by(jti=jti).first()
+                if blocked:
+                    return jsonify({'success': False, 'message': '로그아웃된 토큰입니다.'}), 401
+
+            current_user = {'user_id': payload['user_id'], 'username': payload['username']}
+        except Exception as e:
             return jsonify({'success': False, 'message': str(e)}), 401
 
-        return f(*args, **kwargs)
+        return f(current_user, *args, **kwargs)
 
     return decorated

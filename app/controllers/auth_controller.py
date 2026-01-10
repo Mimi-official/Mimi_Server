@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flasgger import swag_from
 from app.services.auth_service import AuthService
+from app.utils.auth import token_required
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -204,3 +205,27 @@ def login():
             'success': False,
             'message': '서버 오류가 발생했습니다.'
         }), 500
+
+
+@auth_bp.route('/logout', methods=['POST'])
+@token_required
+def logout(current_user):
+    """로그아웃
+    ---
+    tags:
+      - 인증 (Auth)
+    summary: 로그아웃
+    description: 현재 사용 중인 토큰을 블랙리스트에 등록하여 무효화합니다.
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: 로그아웃 성공
+    """
+    token = request.headers.get('Authorization').split(' ')[1]
+    AuthService.logout(token)
+
+    return jsonify({
+        'success': True,
+        'message': '성공적으로 로그아웃되었습니다.'
+    }), 200

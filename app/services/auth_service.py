@@ -53,3 +53,29 @@ class AuthService:
             'token': token,
             'user': user.to_dict()
         }
+
+    @staticmethod
+    def logout(token: str):
+        """로그아웃 (토큰 블랙리스트 추가)"""
+        try:
+            payload = decode_token(token)
+            jti = payload.get('jti')
+            exp = payload.get('exp')
+            user_id = payload.get('user_id')
+
+            if not jti:
+                raise ValueError('토큰에 식별자(jti)가 없습니다.')
+
+            # 블랙리스트에 저장
+            blocked_token = TokenBlocklist(
+                jti=jti,
+                user_id=user_id,
+                expires_at=datetime.fromtimestamp(exp)
+            )
+
+            db.session.add(blocked_token)
+            db.session.commit()
+
+        except Exception as e:
+            # 이미 만료된 토큰이거나 오류 발생 시에도 로그아웃 처리된 것으로 간주
+            pass
