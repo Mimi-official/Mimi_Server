@@ -89,6 +89,39 @@ def get_chat_state(char_name):
         }), 500
 
 
+@chat_bp.route('/<char_name>', methods=['POST'])
+@token_required
+def send_message(current_user, char_name):
+    """
+    메시지 전송 또는 선택지 선택
+    ---
+    body:
+      message: "안녕" (자유 채팅 시)
+      choice_index: 1 (이벤트 선택지 선택 시)
+    """
+    try:
+        user_id = current_user['user_id']
+        data = request.get_json()
+
+        user_message = data.get('message')
+        choice_index = data.get('choice_index')
+
+        # 1. 선택지 응답인 경우
+        if choice_index is not None:
+            result = ChatService.handle_choice(user_id, char_name, choice_index)
+
+        # 2. 자유 채팅인 경우
+        elif user_message:
+            result = ChatService.chat_with_character(user_id, char_name, user_message)
+
+        else:
+            return jsonify({'success': False, 'message': '메시지나 선택지를 입력해주세요.'}), 400
+
+        return jsonify({'success': True, 'data': result}), 200
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @chat_bp.route('/<char_name>/choice', methods=['POST'])
 @token_required
 def send_choice(char_name):

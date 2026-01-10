@@ -242,3 +242,109 @@ class ChatService:
             'current_step': progress.current_step,
             'affinity': progress.affinity
         }
+
+
+@staticmethod
+def chat_with_character(user_id: int, char_name: str, message: str) -> dict:
+    """자유 채팅 처리"""
+    progress = ChatService.get_or_create_progress(user_id, char_name)
+    character = CharacterService.get_character_by_name(char_name)
+
+    # 1. 유저 메시지 저장
+    user_log = ChatLog(user_id=user_id, char_name=char_name, sender='user', message=message)
+    db.session.add(user_log)
+
+    # 2. Gemini에게 응답 요청 (컨텍스트 포함)
+    chat_history = ChatService.get_chat_history(user_id, char_name, limit=10)
+    gemini = gemini_service()
+    ai_response_text = gemini.generate_chat_response(character, chat_history, message)
+
+    # 3. AI 응답 저장
+    ai_log = ChatLog(user_id=user_id, char_name=char_name, sender='ai', message=ai_response_text)
+    db.session.add(ai_log)
+
+    # 4. 턴 수 증가 및 이벤트 트리거 체크
+    progress.turn_count += 1
+
+    # 예: 3턴마다 이벤트 발생 (또는 호감도 기반 로직 추가 가능)
+    trigger_event = False
+    if progress.turn_count >= 3 and progress.is_chatting and not progress.is_ended:
+        # 다음 이벤트가 존재하는지 확인
+        next_event = CharacterEvent.query.filter_by(
+            char_id=character.id, event_order=progress.current_step
+        ).first()
+
+        if next_event:
+            progress.is_chatting = False  # 채팅 중단, 선택지 모드 진입
+            trigger_event = True
+            progress.turn_count = 0  # 턴 리셋
+
+    db.session.commit()
+
+    return {
+        'type': 'chat',
+        'response': ai_response_text,
+        'trigger_event': trigger_event,  # 프론트에서 이 값이 True면 /event API를 호출하여 선택지 렌더링
+        'affinity': progress.affinity
+    }
+
+
+@staticmethod
+def handle_choice(user_id: int, char_name: str, choice_index: int) -> dict:
+    """선택지 처리"""
+    progress = ChatService.get_or_create_progress(user_id, char_name)
+    character = CharacterService.get_character_by_name(char_name)
+
+    # 현재 이벤트 가져오기
+    event = CharacterEvent.query.filter_by(
+        char_id=character.id, event_order=progress.current_step
+    ).first()
+
+    if not event:
+        raise ValueError("진행할 이벤트가 없습니다.")
+
+    # 선택지에 따른 점수 계산 (1, 2, 3번 선택지)
+    score = 0
+    choice_text = ""
+
+    if choice_index == 1:
+        score = event.choice_1_score
+        choice_text = event.choice_1
+    elif choice_index == 2:
+        score = event.choice_2_score
+        choice_text = event.choice_2
+    elif choice_index == 3:
+        score = event.choice_3_score
+        choice_text = event.choice_3
+
+    # 호감도 반영
+    progress.affinity += score
+
+    # 유저가 선택한 내용을 로그로 저장 (선택지도 대화의 일부로 취급)
+    log = ChatLog(user_id=user_id, char_name=char_name, sender='user', message=f"[선택] {choice_text}")
+    db.session.add(log)
+
+    # Gemini에게 선택 결과에 대한 짧은 리액션 요청
+    gemini = gemini_service()
+    reaction = gemini.generate_reaction(character, choice_text, score)
+    ai_log = ChatLog(user_id=user_id, char_name=char_name, sender='ai', message=reaction)
+    db.session.add(ai_log)
+
+    # 상태 업데이트
+    progress.current_step += 1
+    progress.is_chatting = True  # 다시 채팅 모드로 복귀
+
+    # 엔딩 체크
+    ending = determine_ending(progress.affinity, score >= 30)  # 히든 조건(30점 이상) 체크
+    if progress.current_step > 3 or ending:  # 3번 이벤트 후 또는 엔딩 조건 충족 시
+        progress.is_ended = True
+
+    db.session.commit()
+
+    return {
+        'type': 'choice_result',
+        'response': reaction,
+        'affinity': progress.affinity,
+        'is_ended': progress.is_ended,
+        'ending': ending if progress.is_ended else None
+    }
