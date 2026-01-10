@@ -1,7 +1,9 @@
 from flask import Flask
 from flask_cors import CORS
+from flasgger import Swagger
 from app.config import Config
 from app.models import db
+from app.swagger_config import swagger_config, swagger_template
 
 
 def create_app(config_class=Config):
@@ -13,6 +15,9 @@ def create_app(config_class=Config):
 
     # 데이터베이스 초기화
     db.init_app(app)
+
+    # Swagger 초기화
+    Swagger(app, config=swagger_config, template=swagger_template)
 
     # 블루프린트 등록
     from app.controllers.auth_controller import auth_bp
