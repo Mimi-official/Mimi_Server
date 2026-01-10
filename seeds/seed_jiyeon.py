@@ -14,11 +14,19 @@ def seed_jiyeon():
             hashtags='#테트리스 #고인물 #와샌즈 #냉미녀',
             description='그녀의 눈동자는 마치 떨어지는 테트리스 블록을 계산하듯 차갑고 예리하게 빛난다.',
             system_prompt='당신은 한지연(22세)입니다. 테트리스 세계 챔피언이며 매사 냉철하지만 샌즈 캐릭터를 매우 좋아합니다.',
+
+            # [이미지 경로 설정]
             profile_img_url='/static/images/jiyeon/profile.png',
-            success_end_title='퍼펙트 클리어', success_end_content='당신은 나에게 딱 맞는 마지막 조각이었어.',
+            success_end_title='퍼펙트 클리어',
+            success_end_content='당신은 나에게 딱 맞는 마지막 조각이었어.',
             success_end_img='/static/images/jiyeon/success.png',
-            fail_end_title='게임 오버', fail_end_content='당신과는 호흡이 맞지 않아.', fail_end_img='/static/images/jiyeon/fail.png',
-            hidden_end_title='몰살 루트의 동반자', hidden_end_content='끔찍한 시간을 보내고 싶어? 나랑 같이.',
+
+            fail_end_title='게임 오버',
+            fail_end_content='당신과는 호흡이 맞지 않아. 블록이 꼬여버렸어.',
+            fail_end_img='/static/images/jiyeon/fail.png',
+
+            hidden_end_title='몰살 루트의 동반자',
+            hidden_end_content='끔찍한 시간을 보내고 싶어? 나랑 같이.',
             hidden_end_img='/static/images/jiyeon/hidden.png'
         )
         db.session.add(jiyeon)
@@ -38,7 +46,7 @@ def seed_jiyeon():
         ]
         db.session.add_all(events)
         db.session.commit()
-        print("한지연 시드 데이터 생성 완료")
+        print("한지연 시드 데이터 생성 완료 (이미지 경로 포함)")
 
 
 if __name__ == '__main__':

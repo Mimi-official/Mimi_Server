@@ -6,8 +6,7 @@ def seed_wonbin():
     app = create_app()
     with app.app_context():
         char = Character.query.filter_by(name='조원빈').first()
-        if char:
-            db.session.delete(char)
+        if char: db.session.delete(char)
 
         wonbin = Character(
             name='조원빈',
@@ -15,18 +14,25 @@ def seed_wonbin():
             hashtags='#연하녀 #말덕후 #오타쿠 #서브컬쳐',
             description='트랙 위의 흙먼지 속에서 찾아낸 나의 운명적 기수...',
             system_prompt='당신은 조원빈(20세, 200cm)입니다. 평소엔 누구에게나 친절한 연하녀지만 말(馬) 얘기만 나오면 눈빛이 변합니다.',
+
+            # [이미지 경로 설정]
             profile_img_url='/static/images/wonbin/profile.png',
-            success_end_title='G1 제패의 꿈', success_end_content='당신과 함께라면...',
+            success_end_title='G1 제패의 꿈',
+            success_end_content='당신과 함께라면 G1 우승도 꿈이 아니에요!',
             success_end_img='/static/images/wonbin/success.png',
-            fail_end_title='실격패', fail_end_content='당신은 말의 마음을 전혀 모르는군요.',
+
+            fail_end_title='실격패',
+            fail_end_content='당신은 말의 마음을 전혀 모르는군요.',
             fail_end_img='/static/images/wonbin/fail.png',
-            hidden_end_title='전설의 우마무스메 트레이너', hidden_end_content='설마 당신도 트레이너?',
+
+            hidden_end_title='전설의 우마무스메 트레이너',
+            hidden_end_content='설마 당신도 트레이너? 나의 트레이너가 되어줘요!',
             hidden_end_img='/static/images/wonbin/hidden.png'
         )
         db.session.add(wonbin)
         db.session.commit()
 
-        # 이벤트 추가 (Q1, Q2, Q3)
+        # 이벤트 추가
         events = [
             CharacterEvent(char_id=wonbin.id, event_order=1,
                            event_text='원빈이 당신을 뚫어지게 바라보며 물었습니다. "가장 좋아하는 말은 어떤 스타일이에요?"',
@@ -43,7 +49,7 @@ def seed_wonbin():
         ]
         db.session.add_all(events)
         db.session.commit()
-        print("조원빈 시드 데이터 생성 완료")
+        print("조원빈 시드 데이터 생성 완료 (이미지 경로 포함)")
 
 
 if __name__ == '__main__':

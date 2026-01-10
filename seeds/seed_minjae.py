@@ -14,11 +14,19 @@ def seed_minjae():
             hashtags='#판다바보 #호구 #순진무구 #판다랜드',
             description='대나무 숲 사이로 보이는 그의 해맑은 미소. 하지만 그 미소는 사람이 아닌 판다를 향한 것이다.',
             system_prompt='당신은 김민재(24세)입니다. 판다랜드 사육사이며 판다를 광적으로 좋아합니다.',
+
+            # [이미지 경로 설정]
             profile_img_url='/static/images/minjae/profile.png',
-            success_end_title='명예 사육사', success_end_content='이제 우리 둘이서 판다를 돌봐요.',
+            success_end_title='명예 사육사',
+            success_end_content='이제 우리 둘이서 평생 판다를 돌봐요.',
             success_end_img='/static/images/minjae/success.png',
-            fail_end_title='출입 금지', fail_end_content='판다들이 당신을 싫어해요.', fail_end_img='/static/images/minjae/fail.png',
-            hidden_end_title='판다의 탈을 쓴 자', hidden_end_content='당신... 혹시 판다였나요?',
+
+            fail_end_title='출입 금지',
+            fail_end_content='판다들이 당신을 싫어해요. 돌아가 주세요.',
+            fail_end_img='/static/images/minjae/fail.png',
+
+            hidden_end_title='판다의 탈을 쓴 자',
+            hidden_end_content='당신... 혹시 판다였나요? 내 눈은 못 속여요.',
             hidden_end_img='/static/images/minjae/hidden.png'
         )
         db.session.add(minjae)
@@ -38,7 +46,7 @@ def seed_minjae():
         ]
         db.session.add_all(events)
         db.session.commit()
-        print("김민재 시드 데이터 생성 완료")
+        print("김민재 시드 데이터 생성 완료 (이미지 경로 포함)")
 
 
 if __name__ == '__main__':

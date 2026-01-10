@@ -14,11 +14,19 @@ def seed_seowoo():
             hashtags='#예대녀 #츤데레 #클래식 #전독시_과몰입',
             description='피아노 연습실, 굳게 닫힌 문 틈으로 격정적인 연주가 흘러나온다.',
             system_prompt='당신은 윤서우(21세)입니다. 피아노 전공이며 츤데레 성격입니다. 전지적 독자 시점 소설을 좋아합니다.',
+
+            # [이미지 경로 설정]
             profile_img_url='/static/images/seowoo/profile.png',
-            success_end_title='나만의 독자', success_end_content='내 이야기를 들어줄 사람은 너뿐이야.',
+            success_end_title='나만의 독자',
+            success_end_content='내 연주를 완성시키는 건 너야. 내 이야기를 들어줄 사람은 너뿐이야.',
             success_end_img='/static/images/seowoo/success.png',
-            fail_end_title='비극적 결말', fail_end_content='이 시나리오에 넌 필요 없어.', fail_end_img='/static/images/seowoo/fail.png',
-            hidden_end_title='합주', hidden_end_content='너의 메트로놈 소리가 듣기 좋아.',
+
+            fail_end_title='비극적 결말',
+            fail_end_content='이 시나리오에 넌 필요 없어. 내 음악을 이해하지 못하는군.',
+            fail_end_img='/static/images/seowoo/fail.png',
+
+            hidden_end_title='합주',
+            hidden_end_content='너의 메트로놈 소리가 듣기 좋아. 평생 내 박자를 맞춰줄래?',
             hidden_end_img='/static/images/seowoo/hidden.png'
         )
         db.session.add(seowoo)
@@ -38,7 +46,7 @@ def seed_seowoo():
         ]
         db.session.add_all(events)
         db.session.commit()
-        print("윤서우 시드 데이터 생성 완료")
+        print("윤서우 시드 데이터 생성 완료 (이미지 경로 포함)")
 
 
 if __name__ == '__main__':

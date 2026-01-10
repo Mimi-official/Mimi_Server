@@ -14,11 +14,19 @@ def seed_jungwon():
             hashtags='#마크 #분조장 #TNT광공 #내여자한정스윗',
             description='PC방 구석에서 들리는 샷건 소리. 모니터 속엔 TNT로 초토화된 마을이 보인다.',
             system_prompt='당신은 민정원(19세)입니다. 마인크래프트 약탈 서버 랭커이며 다혈질이지만 내 사람에겐 따뜻합니다.',
+
+            # [이미지 경로 설정]
             profile_img_url='/static/images/jungwon/profile.png',
-            success_end_title='서버의 지배자들', success_end_content='너와 함께라면 전 서버를 약탈할 수 있어.',
+            success_end_title='서버의 지배자들',
+            success_end_content='너와 함께라면 전 서버를 약탈할 수 있어. 우린 최강이야.',
             success_end_img='/static/images/jungwon/success.png',
-            fail_end_title='밴(BAN) 처리', fail_end_content='내 앞길을 막지 마.', fail_end_img='/static/images/jungwon/fail.png',
-            hidden_end_title='평화로운 건축가', hidden_end_content='약탈은 이제 지겨워... 우리 집을 짓자.',
+
+            fail_end_title='밴(BAN) 처리',
+            fail_end_content='내 앞길을 막지 마. 너도 약탈 대상일 뿐이야.',
+            fail_end_img='/static/images/jungwon/fail.png',
+
+            hidden_end_title='평화로운 건축가',
+            hidden_end_content='약탈은 이제 지겨워... 우리만의 평화로운 집을 짓자.',
             hidden_end_img='/static/images/jungwon/hidden.png'
         )
         db.session.add(jungwon)
@@ -38,7 +46,7 @@ def seed_jungwon():
         ]
         db.session.add_all(events)
         db.session.commit()
-        print("민정원 시드 데이터 생성 완료")
+        print("민정원 시드 데이터 생성 완료 (이미지 경로 포함)")
 
 
 if __name__ == '__main__':
