@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flasgger import swag_from
 from app.services.auth_service import AuthService
 from app.utils.auth import token_required
+import traceback # <-- 파일 맨 위에 추가
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -99,11 +100,13 @@ def register():
             'success': False,
             'message': str(e)
         }), 400
+
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': '서버 오류가 발생했습니다.'
-        }), 500
+        print("\n\n🔥 진짜 에러 내용은 아래와 같습니다 🔥")
+        traceback.print_exc()  # <--- 에러의 상세 위치와 원인을 출력해줍니다.
+        print("🔥 ----------------------------- 🔥\n\n")
+
+        return jsonify({'message': '서버 에러'}), 500
 
 
 @auth_bp.route('/login', methods=['POST'])
