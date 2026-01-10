@@ -1,16 +1,19 @@
 from app.models import db, User
-from app.utils.auth import hash_password, verify_password, create_token
+from app.models.token_blocklist import TokenBlocklist
+from app.utils.auth import hash_password, verify_password, create_token, decode_token
+from datetime import datetime
 
 
 class AuthService:
     @staticmethod
     def register(username: str, nickname: str, password: str) -> dict:
         """회원가입"""
-        # 중복 체크
+
+        # 1. 아이디 중복 체크 (여기서 SELECT 쿼리 발생)
         if User.query.filter_by(username=username).first():
             raise ValueError('이미 존재하는 아이디입니다.')
 
-        # 유효성 검사
+        # 2. 유효성 검사
         if len(username) < 3 or len(username) > 20:
             raise ValueError('아이디는 3자 이상 20자 이하로 입력해주세요.')
 
@@ -20,18 +23,19 @@ class AuthService:
         if not nickname or len(nickname) < 2:
             raise ValueError('닉네임은 2자 이상 입력해주세요.')
 
-        # 비밀번호 해싱
+        # 3. 비밀번호 암호화 (이 함수가 없으면 500 에러 발생)
         hashed_password = hash_password(password)
 
-        # 사용자 생성
+        # 4. 사용자 모델 생성
         user = User(
             username=username,
             nickname=nickname,
             password=hashed_password
         )
 
+        # 5. DB 저장
         db.session.add(user)
-        db.session.commit()
+        db.session.commit()  # 여기서 INSERT 쿼리 발생
 
         return user.to_dict()
 
@@ -46,7 +50,6 @@ class AuthService:
         if not verify_password(password, user.password):
             raise ValueError('아이디 또는 비밀번호가 일치하지 않습니다.')
 
-        # JWT 토큰 생성
         token = create_token(user.id, user.username)
 
         return {
@@ -64,7 +67,8 @@ class AuthService:
             user_id = payload.get('user_id')
 
             if not jti:
-                raise ValueError('토큰에 식별자(jti)가 없습니다.')
+                # jti가 없는 구버전 토큰 등의 경우 그냥 무시
+                return
 
             # 블랙리스트에 저장
             blocked_token = TokenBlocklist(
@@ -76,6 +80,6 @@ class AuthService:
             db.session.add(blocked_token)
             db.session.commit()
 
-        except Exception as e:
-            # 이미 만료된 토큰이거나 오류 발생 시에도 로그아웃 처리된 것으로 간주
+        except Exception:
+            # 이미 만료되었거나 오류 발생 시에도 로그아웃 처리된 것으로 간주
             pass
