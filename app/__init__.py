@@ -11,7 +11,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     # CORS 설정
-    CORS(app, origins=app.config['CORS_ORIGINS'])
+    CORS(app, resources={r"/*": {"origins": app.config['CORS_ORIGINS']}}, supports_credentials=True)
 
     # 데이터베이스 초기화
     db.init_app(app)

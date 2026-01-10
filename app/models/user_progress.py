@@ -9,7 +9,7 @@ class UserProgress(db.Model):
     char_name = db.Column(db.String(50), nullable=False)
 
     affinity = db.Column(db.Integer, default=0)
-    current_step = db.Column(db.Integer, default=1)  # 현재 도달한 이벤트 단계 (1, 2, 3...)
+    current_step = db.Column(db.Integer, default=0)  # 현재 도달한 이벤트 단계 (1, 2, 3...)
     turn_count = db.Column(db.Integer, default=0)  # 자유 채팅 횟수 (이벤트 트리거용)
     is_ended = db.Column(db.Boolean, default=False)
 
