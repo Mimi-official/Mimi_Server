@@ -105,3 +105,13 @@ class AuthService:
         except Exception as e:
             db.session.rollback()
             raise Exception(f'탈퇴 처리 중 오류 발생: {str(e)}')
+
+    @staticmethod
+    def get_current_user(user_id: int) -> dict:
+        """현재 사용자 정보 조회"""
+        user = User.query.get(user_id)
+
+        if not user:
+            raise ValueError('사용자 정보를 찾을 수 없습니다.')
+
+        return user.to_dict()
