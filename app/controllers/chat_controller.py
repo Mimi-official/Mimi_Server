@@ -6,6 +6,97 @@ import traceback
 chat_bp = Blueprint('chat', __name__, url_prefix='/api/chat')
 
 
+@chat_bp.route('/start', methods=['POST'])
+@token_required
+def start_chat(current_user):
+    """채팅방 시작 (초기화)
+    ---
+    tags:
+      - 채팅 (Chat)
+    summary: 캐릭터 선택 및 대화 시작
+    description: |
+      특정 캐릭터를 선택하여 대화를 시작합니다.
+      - 기존 대화 내역이 있다면 모두 **삭제**됩니다.
+      - 호감도와 진행 단계가 **초기화**됩니다.
+      - 캐릭터의 성격에 맞는 **첫 인사말(AI 생성)**을 반환합니다.
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - character_id
+          properties:
+            character_id:
+              type: integer
+              example: 1
+              description: 선택한 캐릭터의 ID
+    responses:
+      200:
+        description: 시작 성공
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            data:
+              type: object
+              properties:
+                character_id:
+                  type: integer
+                  example: 1
+                character_name:
+                  type: string
+                  example: "이준호"
+                greeting:
+                  type: string
+                  example: "왔어? 기다리고 있었는데... 앉아."
+                  description: AI가 생성한 첫 인사말
+                profile_img:
+                  type: string
+                  example: "https://example.com/images/junho.jpg"
+                affinity:
+                  type: integer
+                  example: 0
+                current_step:
+                  type: integer
+                  example: 1
+      400:
+        description: 요청 데이터 오류 (character_id 누락)
+      404:
+        description: 캐릭터를 찾을 수 없음
+      500:
+        description: 서버 내부 에러
+    """
+    try:
+        data = request.get_json()
+        char_id = data.get('character_id')
+
+        if not char_id:
+            return jsonify({'success': False, 'message': 'character_id가 필요합니다.'}), 400
+
+        user_id = current_user['user_id']
+
+        # 서비스 호출
+        result = ChatService.start_chat(user_id, char_id)
+
+        return jsonify({
+            'success': True,
+            'data': result
+        }), 200
+
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 404
+    except Exception as e:
+        print(f"🔥 채팅 시작 에러: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': '채팅방 생성 중 오류가 발생했습니다.'}), 500
+
+
 @chat_bp.route('/list', methods=['GET'])
 @token_required
 def get_chat_list(current_user):
@@ -219,17 +310,17 @@ def get_current_event(current_user, char_name):
                       type: integer
                     event_text:
                       type: string
-                choices:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      text:
-                        type: string
-                      score:
-                        type: integer
-                      index:
-                        type: integer
+                    choices:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          text:
+                            type: string
+                          score:
+                            type: integer
+                          index:
+                            type: integer
                 current_step:
                   type: integer
                 affinity:
@@ -266,9 +357,8 @@ def send_message(current_user, char_name):
       - 채팅 (Chat)
     summary: 대화하기 또는 선택지 고르기
     description: |
-        - **자유 채팅**: `message` 필드에 내용을 담아 보냅니다.
-        - **선택지 선택**: `choice_index` (1, 2, 3)를 담아 보냅니다.
-        둘 중 하나는 반드시 포함되어야 합니다.
+      - **자유 채팅**: `message` 필드에 내용을 담아 보냅니다.
+      - **선택지 선택**: `choice_index` (1, 2, 3)를 담아 보냅니다. 둘 중 하나는 반드시 포함되어야 합니다.
     security:
       - Bearer: []
     parameters:
@@ -277,7 +367,6 @@ def send_message(current_user, char_name):
         type: string
         required: true
         description: 캐릭터 이름
-        example: 조원빈
       - in: body
         name: body
         required: true
@@ -286,15 +375,13 @@ def send_message(current_user, char_name):
           properties:
             message:
               type: string
-              description: 사용자 입력 메시지 (자유 채팅용)
-              example: 안녕, 오늘 기분 어때?
+              example: "안녕, 반가워!"
             choice_index:
               type: integer
-              description: 선택지 번호 (이벤트용, 1~3)
               example: 1
     responses:
       200:
-        description: 응답 성공
+        description: 처리 성공
         schema:
           type: object
           properties:
@@ -306,54 +393,49 @@ def send_message(current_user, char_name):
               properties:
                 type:
                   type: string
-                  description: chat 또는 choice_result
-                  example: choice_result
+                  example: chat
+                  description: "chat(대화) 또는 choice(선택)"
                 response:
                   type: string
-                  description: AI 응답 또는 리액션
-                  example: 오... 당신, 진짜를 아시는군요?
-                affinity:
-                  type: integer
-                  example: 40
+                  example: "AI 응답 메시지"
                 trigger_event:
                   type: boolean
-                  description: (채팅시) 이벤트 발생 여부
                   example: false
-                is_ended:
-                  type: boolean
-                  example: false
-                ending:
-                  type: object
-                  nullable: true
-      400:
-        description: 입력 오류
+                  description: "이벤트 발생 여부"
+                affinity:
+                  type: integer
     """
     try:
         user_id = current_user['user_id']
         data = request.get_json()
 
-        user_message = data.get('message')
+        message = data.get('message')
         choice_index = data.get('choice_index')
 
-        # 1. 선택지 응답인 경우
-        if choice_index is not None:
-            result = ChatService.handle_choice(user_id, char_name, choice_index)
+        if message:
+            # 1. 자유 채팅
+            result = ChatService.chat_with_character(user_id, char_name, message)
+            return jsonify({
+                'success': True,
+                'data': result
+            }), 200
 
-        # 2. 자유 채팅인 경우
-        elif user_message:
-            result = ChatService.chat_with_character(user_id, char_name, user_message)
+        elif choice_index:
+            # 2. 선택지 선택
+            result = ChatService.handle_choice(user_id, char_name, int(choice_index))
+            return jsonify({
+                'success': True,
+                'data': result
+            }), 200
 
         else:
             return jsonify({
                 'success': False,
-                'message': '메시지나 선택지를 입력해주세요.'
+                'message': 'message 또는 choice_index가 필요합니다.'
             }), 400
 
-        return jsonify({
-            'success': True,
-            'data': result
-        }), 200
-
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
     except Exception as e:
         print("\n\n🔥 메시지 전송 에러 🔥")
         traceback.print_exc()
@@ -361,61 +443,5 @@ def send_message(current_user, char_name):
 
         return jsonify({
             'success': False,
-            'message': str(e)
-        }), 500
-
-
-@chat_bp.route('/<char_name>/reset', methods=['POST'])
-@token_required
-def reset_chat(current_user, char_name):
-    """대화 초기화
-    ---
-    tags:
-      - 채팅 (Chat)
-    summary: 진행 상황 초기화
-    description: 특정 캐릭터와의 모든 진행 상태와 채팅 기록을 삭제합니다.
-    security:
-      - Bearer: []
-    parameters:
-      - in: path
-        name: char_name
-        required: true
-        type: string
-        description: 캐릭터 이름
-        example: 조원빈
-    responses:
-      200:
-        description: 초기화 성공
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            data:
-              type: object
-              properties:
-                message:
-                  type: string
-                  example: 진행 상태가 초기화되었습니다.
-      404:
-        description: 진행 상태를 찾을 수 없음
-    """
-    try:
-        user_id = current_user['user_id']
-        result = ChatService.reset_progress(user_id, char_name)
-
-        return jsonify({
-            'success': True,
-            'data': result
-        }), 200
-
-    except Exception as e:
-        print("\n\n🔥 대화 초기화 에러 🔥")
-        traceback.print_exc()
-        print("🔥 ----------------------------- 🔥\n\n")
-
-        return jsonify({
-            'success': False,
-            'message': str(e)
+            'message': '서버 오류가 발생했습니다.'
         }), 500
