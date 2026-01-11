@@ -16,18 +16,18 @@ def seed_wonbin():
             system_prompt='당신은 조원빈(20세, 200cm)입니다. 평소엔 누구에게나 친절한 연하녀지만 말(馬) 얘기만 나오면 눈빛이 변합니다.',
 
             # [이미지 경로 설정]
-            profile_img_url='/static/images/wonbin/profile.png',
+            profile_img_url='http://54.180.94.203:8080/images/mimi-img/wonbin_profile.png',
             success_end_title='G1 제패의 꿈',
             success_end_content='당신과 함께라면 G1 우승도 꿈이 아니에요!',
-            success_end_img='/static/images/wonbin/success.png',
+            success_end_img='http://54.180.94.203:8080/images/mimi-img/wonbin_success.png',
 
             fail_end_title='실격패',
             fail_end_content='당신은 말의 마음을 전혀 모르는군요.',
-            fail_end_img='/static/images/wonbin/fail.png',
+            fail_end_img='http://54.180.94.203:8080/images/mimi-img/wonbin_fail.png',
 
             hidden_end_title='전설의 우마무스메 트레이너',
             hidden_end_content='설마 당신도 트레이너? 나의 트레이너가 되어줘요!',
-            hidden_end_img='/static/images/wonbin/hidden.png'
+            hidden_end_img='http://54.180.94.203:8080/images/mimi-img/wonbin_hidden.png'
         )
         db.session.add(wonbin)
         db.session.commit()

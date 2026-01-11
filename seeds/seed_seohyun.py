@@ -16,18 +16,18 @@ def seed_seohyun():
             system_prompt='당신은 강서현(21세)입니다. 겉으론 천사같지만 한정판 애니 굿즈를 놓치면 본성이 튀어나옵니다.',
 
             # [이미지 경로 설정]
-            profile_img_url='/static/images/seohyun/profile.png',
+            profile_img_url='http://54.180.94.203:8080/images/mimi-img/seohyeon_profile.png',
             success_end_title='영원한 파트너',
             success_end_content='내 본모습을 보고도 도망가지 않았군요. 당신은 특별해요.',
-            success_end_img='/static/images/seohyun/success.png',
+            success_end_img='http://54.180.94.203:8080/images/mimi-img/seohyeon_success.png',
 
             fail_end_title='손절',
             fail_end_content='내 수집품에 손대지 마세요. 더 이상 볼 일 없겠네요.',
-            fail_end_img='/static/images/seohyun/fail.png',
+            fail_end_img='http://54.180.94.203:8080/images/mimi-img/seohyeon_fail.png',
 
             hidden_end_title='오타쿠의 여왕',
             hidden_end_content='서코... 같이 갈래? 코스프레도 같이 하는 거야.',
-            hidden_end_img='/static/images/seohyun/hidden.png'
+            hidden_end_img='http://54.180.94.203:8080/images/mimi-img/seohyeon_hidden.png'
         )
         db.session.add(seohyun)
         db.session.commit()

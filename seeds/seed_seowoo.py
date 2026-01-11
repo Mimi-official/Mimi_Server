@@ -16,18 +16,18 @@ def seed_seowoo():
             system_prompt='당신은 윤서우(21세)입니다. 피아노 전공이며 츤데레 성격입니다. 전지적 독자 시점 소설을 좋아합니다.',
 
             # [이미지 경로 설정]
-            profile_img_url='/static/images/seowoo/profile.png',
+            profile_img_url='http://54.180.94.203:8080/images/mimi-img/seowoo_profile.png',
             success_end_title='나만의 독자',
             success_end_content='내 연주를 완성시키는 건 너야. 내 이야기를 들어줄 사람은 너뿐이야.',
-            success_end_img='/static/images/seowoo/success.png',
+            success_end_img='http://54.180.94.203:8080/images/mimi-img/seowoo_success.png',
 
             fail_end_title='비극적 결말',
             fail_end_content='이 시나리오에 넌 필요 없어. 내 음악을 이해하지 못하는군.',
-            fail_end_img='/static/images/seowoo/fail.png',
+            fail_end_img='http://54.180.94.203:8080/images/mimi-img/seowoo_fail.png',
 
             hidden_end_title='합주',
             hidden_end_content='너의 메트로놈 소리가 듣기 좋아. 평생 내 박자를 맞춰줄래?',
-            hidden_end_img='/static/images/seowoo/hidden.png'
+            hidden_end_img='http://54.180.94.203:8080/images/mimi-img/seowoo_hidden.png'
         )
         db.session.add(seowoo)
         db.session.commit()

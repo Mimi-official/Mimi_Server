@@ -1,8 +1,7 @@
 from flask import Blueprint, request, jsonify
-from flasgger import swag_from
 from app.services.auth_service import AuthService
 from app.utils.auth import token_required
-import traceback # <-- 파일 맨 위에 추가
+import traceback
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -102,11 +101,14 @@ def register():
         }), 400
 
     except Exception as e:
-        print("\n\n🔥 진짜 에러 내용은 아래와 같습니다 🔥")
-        traceback.print_exc()  # <--- 에러의 상세 위치와 원인을 출력해줍니다.
+        print("\n\n🔥 회원가입 에러 🔥")
+        traceback.print_exc()
         print("🔥 ----------------------------- 🔥\n\n")
 
-        return jsonify({'message': '서버 에러'}), 500
+        return jsonify({
+            'success': False,
+            'message': '서버 오류가 발생했습니다.'
+        }), 500
 
 
 @auth_bp.route('/login', methods=['POST'])
@@ -204,6 +206,10 @@ def login():
             'message': str(e)
         }), 401
     except Exception as e:
+        print("\n\n🔥 로그인 에러 🔥")
+        traceback.print_exc()
+        print("🔥 ----------------------------- 🔥\n\n")
+
         return jsonify({
             'success': False,
             'message': '서버 오류가 발생했습니다.'
@@ -217,18 +223,116 @@ def logout(current_user):
     ---
     tags:
       - 인증 (Auth)
-    summary: 로그아웃
-    description: 현재 사용 중인 토큰을 블랙리스트에 등록하여 무효화합니다.
     security:
       - Bearer: []
     responses:
       200:
         description: 로그아웃 성공
+      401:
+        description: 인증 실패
     """
-    token = request.headers.get('Authorization').split(' ')[1]
-    AuthService.logout(token)
+    try:
+        # [수정된 부분] Bearer가 있든 없든 안전하게 토큰 추출
+        auth_header = request.headers.get('Authorization')
+        if ' ' in auth_header:
+            token = auth_header.split(' ')[1]
+        else:
+            token = auth_header
 
-    return jsonify({
-        'success': True,
-        'message': '성공적으로 로그아웃되었습니다.'
-    }), 200
+        AuthService.logout(token)
+
+        return jsonify({
+            'success': True,
+            'message': '로그아웃되었습니다.'
+        }), 200
+
+    except Exception as e:
+        print(f"\n\n🔥 로그아웃 에러 🔥\n{str(e)}\n🔥 ----------------------------- 🔥\n")
+        return jsonify({
+            'success': False,
+            'message': '로그아웃 처리 중 오류가 발생했습니다.'
+        }), 500
+
+
+@auth_bp.route('/delete', methods=['DELETE'])
+@token_required
+def delete_account(current_user):
+    """회원 탈퇴
+    ---
+    tags:
+      - 인증 (Auth)
+    summary: 회원 탈퇴
+    description: 사용자 계정과 모든 관련 데이터를 삭제합니다. (복구 불가)
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - password
+          properties:
+            password:
+              type: string
+              example: password123
+              description: 현재 비밀번호 (본인 확인용)
+    responses:
+      200:
+        description: 회원 탈퇴 성공
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: 회원 탈퇴가 완료되었습니다.
+      400:
+        description: 비밀번호 오류
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: false
+            message:
+              type: string
+              example: 비밀번호가 일치하지 않습니다.
+      401:
+        description: 인증 실패
+    """
+    try:
+        data = request.get_json()
+        password = data.get('password')
+
+        if not password:
+            return jsonify({
+                'success': False,
+                'message': '비밀번호를 입력해주세요.'
+            }), 400
+
+        user_id = current_user['user_id']
+        result = AuthService.delete_account(user_id, password)
+
+        return jsonify({
+            'success': True,
+            'message': result['message']
+        }), 200
+
+    except ValueError as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 400
+    except Exception as e:
+        print("\n\n🔥 회원 탈퇴 에러 🔥")
+        traceback.print_exc()
+        print("🔥 ----------------------------- 🔥\n\n")
+
+        return jsonify({
+            'success': False,
+            'message': '서버 오류가 발생했습니다.'
+        }), 500

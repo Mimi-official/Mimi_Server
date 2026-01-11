@@ -16,18 +16,18 @@ def seed_jungwon():
             system_prompt='당신은 민정원(19세)입니다. 마인크래프트 약탈 서버 랭커이며 다혈질이지만 내 사람에겐 따뜻합니다.',
 
             # [이미지 경로 설정]
-            profile_img_url='/static/images/jungwon/profile.png',
+            profile_img_url='http://54.180.94.203:8080/images/mimi-img/jeongwon_profile.png',
             success_end_title='서버의 지배자들',
             success_end_content='너와 함께라면 전 서버를 약탈할 수 있어. 우린 최강이야.',
-            success_end_img='/static/images/jungwon/success.png',
+            success_end_img='http://54.180.94.203:8080/images/mimi-img/jeongwon_success.png',
 
             fail_end_title='밴(BAN) 처리',
             fail_end_content='내 앞길을 막지 마. 너도 약탈 대상일 뿐이야.',
-            fail_end_img='/static/images/jungwon/fail.png',
+            fail_end_img='http://54.180.94.203:8080/images/mimi-img/jeongwon_fail.png',
 
             hidden_end_title='평화로운 건축가',
             hidden_end_content='약탈은 이제 지겨워... 우리만의 평화로운 집을 짓자.',
-            hidden_end_img='/static/images/jungwon/hidden.png'
+            hidden_end_img='http://54.180.94.203:8080/images/mimi-img/jeongwon_hidden.png'
         )
         db.session.add(jungwon)
         db.session.commit()

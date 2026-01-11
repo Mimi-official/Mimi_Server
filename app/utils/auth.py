@@ -55,44 +55,69 @@ def decode_token(token: str) -> dict:
         raise ValueError('유효하지 않은 토큰입니다.')
 
 
+# app/utils/auth.py
+
+from functools import wraps
+from flask import request, jsonify, current_app
+import jwt
+
+# [중요] 순환 참조 방지를 위해 함수 내부에서 import 하거나, 필요한 것만 가져옵니다.
+from app.models.token_blocklist import TokenBlocklist
+
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
 
-        # 1. 헤더에서 토큰 추출
+        # 디버깅: 헤더가 들어오는지 확인
+        print(f"👉 [DEBUG] 요청 헤더: {request.headers.get('Authorization')}")
+
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
             try:
-                # "Bearer 토큰값" 형태에서 토큰값만 분리
-                token = auth_header.split(' ')[1]
+                # "Bearer <토큰>" 형식인지 확인
+                if " " in auth_header:
+                    token = auth_header.split(' ')[1]
+                else:
+                    print("👉 [DEBUG] Bearer 형식이 아님")
+                    token = auth_header  # 혹시 모르니 그냥 넣어봄
             except IndexError:
+                print("👉 [DEBUG] 토큰 추출 실패 (IndexError)")
                 return jsonify({'success': False, 'message': '잘못된 토큰 형식입니다.'}), 401
 
         if not token:
+            print("👉 [DEBUG] 토큰이 없음")
             return jsonify({'success': False, 'message': '인증 토큰이 필요합니다.'}), 401
 
         try:
-            # 2. 토큰 검증
-            payload = decode_token(token)
+            # 토큰 해독 시도
+            # decode_token 함수 내용을 여기에 직접 풀어서 디버깅 (순환 참조 방지 및 확인용)
+            secret_key = current_app.config.get('JWT_SECRET', 'jwt-secret-key')
+            algorithm = current_app.config.get('JWT_ALGORITHM', 'HS256')
 
-            # [중요 수정] 순환 참조 방지를 위해 함수 안에서 import 합니다.
-            from app.models.token_blocklist import TokenBlocklist
+            payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+            print(f"👉 [DEBUG] 토큰 해독 성공: {payload}")
 
-            # 3. 블랙리스트 확인
+            # 블랙리스트 확인
             jti = payload.get('jti')
             if jti:
-                # DB 세션 문제 방지를 위해 조회만 수행
                 blocked = TokenBlocklist.query.filter_by(jti=jti).first()
                 if blocked:
+                    print("👉 [DEBUG] 블랙리스트에 있는 토큰임 (로그아웃됨)")
                     return jsonify({'success': False, 'message': '로그아웃된 토큰입니다.'}), 401
 
-            # 4. 유저 정보 전달
+            # user_id를 current_user로 전달
             current_user = {'user_id': payload['user_id'], 'username': payload['username']}
 
-        except ValueError as e:
-            return jsonify({'success': False, 'message': str(e)}), 401
+        except jwt.ExpiredSignatureError:
+            print("👉 [DEBUG] 토큰 만료됨")
+            return jsonify({'success': False, 'message': '만료된 토큰입니다.'}), 401
+        except jwt.InvalidTokenError as e:
+            print(f"👉 [DEBUG] 유효하지 않은 토큰: {str(e)}")
+            return jsonify({'success': False, 'message': '유효하지 않은 토큰입니다.'}), 401
         except Exception as e:
+            print(f"👉 [DEBUG] 알 수 없는 에러: {str(e)}")
             return jsonify({'success': False, 'message': f'인증 오류: {str(e)}'}), 401
 
         return f(current_user, *args, **kwargs)

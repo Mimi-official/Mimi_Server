@@ -16,18 +16,18 @@ def seed_minjae():
             system_prompt='당신은 김민재(24세)입니다. 판다랜드 사육사이며 판다를 광적으로 좋아합니다.',
 
             # [이미지 경로 설정]
-            profile_img_url='/static/images/minjae/profile.png',
+            profile_img_url='http://54.180.94.203:8080/images/mimi-img/minjae_profile.png',
             success_end_title='명예 사육사',
             success_end_content='이제 우리 둘이서 평생 판다를 돌봐요.',
-            success_end_img='/static/images/minjae/success.png',
+            success_end_img='http://54.180.94.203:8080/images/mimi-img/minjae_success.png',
 
             fail_end_title='출입 금지',
             fail_end_content='판다들이 당신을 싫어해요. 돌아가 주세요.',
-            fail_end_img='/static/images/minjae/fail.png',
+            fail_end_img='http://54.180.94.203:8080/images/mimi-img/minjae_fail.png',
 
             hidden_end_title='판다의 탈을 쓴 자',
             hidden_end_content='당신... 혹시 판다였나요? 내 눈은 못 속여요.',
-            hidden_end_img='/static/images/minjae/hidden.png'
+            hidden_end_img='http://54.180.94.203:8080/images/mimi-img/minjae_hidden.png'
         )
         db.session.add(minjae)
         db.session.commit()

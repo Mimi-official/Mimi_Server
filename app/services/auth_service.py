@@ -8,12 +8,9 @@ class AuthService:
     @staticmethod
     def register(username: str, nickname: str, password: str) -> dict:
         """회원가입"""
-
-        # 1. 아이디 중복 체크 (여기서 SELECT 쿼리 발생)
         if User.query.filter_by(username=username).first():
             raise ValueError('이미 존재하는 아이디입니다.')
 
-        # 2. 유효성 검사
         if len(username) < 3 or len(username) > 20:
             raise ValueError('아이디는 3자 이상 20자 이하로 입력해주세요.')
 
@@ -23,19 +20,16 @@ class AuthService:
         if not nickname or len(nickname) < 2:
             raise ValueError('닉네임은 2자 이상 입력해주세요.')
 
-        # 3. 비밀번호 암호화 (이 함수가 없으면 500 에러 발생)
         hashed_password = hash_password(password)
 
-        # 4. 사용자 모델 생성
         user = User(
             username=username,
             nickname=nickname,
             password=hashed_password
         )
 
-        # 5. DB 저장
         db.session.add(user)
-        db.session.commit()  # 여기서 INSERT 쿼리 발생
+        db.session.commit()
 
         return user.to_dict()
 
@@ -67,7 +61,6 @@ class AuthService:
             user_id = payload.get('user_id')
 
             if not jti:
-                # jti가 없는 구버전 토큰 등의 경우 그냥 무시
                 return
 
             # 블랙리스트에 저장
@@ -80,6 +73,35 @@ class AuthService:
             db.session.add(blocked_token)
             db.session.commit()
 
-        except Exception:
-            # 이미 만료되었거나 오류 발생 시에도 로그아웃 처리된 것으로 간주
+        except Exception as e:
+            # 이미 만료되었거나 오류 발생 시 pass하지만 디버깅을 위해 출력
+            print(f"Logout Warning: {str(e)}")
             pass
+
+    # [추가됨] 회원 탈퇴 기능
+    @staticmethod
+    def delete_account(user_id: int, password: str) -> dict:
+        """회원 탈퇴"""
+        user = User.query.get(user_id)
+
+        if not user:
+            raise ValueError('사용자를 찾을 수 없습니다.')
+
+        # 본인 확인을 위해 비밀번호 재검증
+        if not verify_password(password, user.password):
+            raise ValueError('비밀번호가 일치하지 않습니다.')
+
+        try:
+            # 관련된 데이터 삭제 (Cascade 설정이 안되어 있다면 수동 삭제 필요)
+            # 1. 사용자가 가진 토큰 블랙리스트 데이터 삭제 (선택사항)
+            TokenBlocklist.query.filter_by(user_id=user.id).delete()
+
+            # 2. 사용자 삭제
+            db.session.delete(user)
+            db.session.commit()
+
+            return {'success': True, 'message': '회원 탈퇴가 완료되었습니다.'}
+
+        except Exception as e:
+            db.session.rollback()
+            raise Exception(f'탈퇴 처리 중 오류 발생: {str(e)}')
