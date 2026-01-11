@@ -4,12 +4,11 @@ from app.utils.gemini import gemini_service
 from app.utils.affinity import determine_ending, should_trigger_ending
 from sqlalchemy import and_
 
-
 class ChatService:
     @staticmethod
     def start_chat(user_id: int, char_id: int):
         """
-        채팅방 생성/초기화 및 첫 인사말 생성
+        채팅방 생성/초기화 및 첫 인사말 설정 (DB에 저장된 고정 대사 사용)
         """
         # 1. 캐릭터 확인
         character = Character.query.get(char_id)
@@ -42,30 +41,15 @@ class ChatService:
         # 3. 기존 대화 기록(ChatLog) 삭제 (새 게임을 위해 전면 삭제)
         ChatLog.query.filter_by(user_id=user_id, char_name=character.name).delete()
 
-        # 4. 캐릭터의 첫 인사말 생성 (Gemini 이용)
-        # 상황 설정: 사용자가 처음 말을 걸었거나, 대화를 시작하는 상황
-        system_prompt = f"""
-        당신은 '{character.name}'입니다. 
-        [성격 및 설정]
-        {character.system_prompt}
+        # 4. 캐릭터의 첫 인사말 설정 (AI 생성 X -> DB 값 사용 O)
+        # Character 모델에 'first_message' 컬럼이 존재해야 합니다.
+        greeting_message = character.first_message
 
-        [상황]
-        사용자가 당신에게 대화를 걸기 위해 다가왔거나, 처음 만나는 상황입니다.
+        # 만약 DB에 first_message가 비어있을 경우를 대비한 기본값 (선택 사항)
+        if not greeting_message:
+            greeting_message = f"안녕? 나는 {character.name}(이)야."
 
-        [요청]
-        캐릭터의 말투와 성격을 100% 반영하여, 사용자에게 건넬 '첫 인사말'을 한 마디 해주세요.
-        - 길이는 1~2문장으로 짧게.
-        - 상황에 맞게 자연스럽게 대화를 여세요.
-        - (지문)이나 *행동* 묘사를 적절히 섞어도 좋습니다.
-        """
-
-        try:
-            greeting_message = gemini_service.generate_response(system_prompt)
-        except Exception:
-            # AI 호출 실패 시 안전장치
-            greeting_message = f"{character.name}이(가) 당신을 바라봅니다."
-
-        # 5. 첫 인사말을 DB에 저장 (AI가 먼저 말한 것으로 처리)
+        # 5. 첫 인사말을 DB에 저장
         first_log = ChatLog(
             user_id=user_id,
             char_name=character.name,
@@ -112,13 +96,33 @@ class ChatService:
 
     @staticmethod
     def get_chat_history(user_id: int, char_name: str, limit: int = 10) -> list:
-        """채팅 기록 조회"""
+        """채팅 기록 조회 (프로필 이미지 포함)"""
+
+        # 1. 채팅 로그 조회
         logs = ChatLog.query.filter_by(
             user_id=user_id,
             char_name=char_name
         ).order_by(ChatLog.created_at.asc()).limit(limit).all()
 
-        return [log.to_dict() for log in logs]
+        # 2. 캐릭터 정보 조회 (프로필 이미지를 얻기 위해)
+        character = Character.query.filter_by(name=char_name).first()
+        profile_img_url = character.profile_img_url if character else None
+
+        # 3. 결과 리스트 구성
+        result = []
+        for log in logs:
+            log_data = log.to_dict()
+
+            # sender가 'ai'인 경우에만 캐릭터 프로필 이미지를 넣어줍니다.
+            if log.sender == 'ai':
+                log_data['profile_img_url'] = profile_img_url
+            else:
+                # 사용자(user)인 경우 None (또는 사용자 프사가 있다면 별도 로직 추가)
+                log_data['profile_img_url'] = None
+
+            result.append(log_data)
+
+        return result
 
     @staticmethod
     def get_user_chat_list(user_id: int) -> list:
@@ -176,9 +180,7 @@ class ChatService:
 
         # 2. AI 응답 생성
         chat_history = ChatService.get_chat_history(user_id, char_name, limit=10)
-
-        # 프롬프트 생성 (자유 채팅용)
-        prompt = gemini_service.build_chat_prompt(character, message, progress.affinity, chat_history)
+        prompt = gemini_service.build_character_prompt(character, message, progress.affinity, chat_history)
         ai_response_text = gemini_service.generate_response(prompt)
 
         # 3. AI 응답 저장
@@ -190,29 +192,45 @@ class ChatService:
         )
         db.session.add(ai_log)
 
-        # 4. 턴 수 증가 및 이벤트 트리거 체크
+        # 4. 턴 수 증가 및 호감도 상승
         progress.turn_count += 1
+        progress.affinity += 5
 
+        # [중요] DB에 먼저 반영 (호감도 업데이트 확정)
+        # flush를 하면 commit 전이라도 이후 로직에서 업데이트된 affinity 값을 보장받습니다.
+        db.session.flush()
+
+        # 5. 이벤트 트리거 로직 강화
         trigger_event = False
-        # 3턴 이상 대화했고, 아직 대화 중이며, 엔딩이 안 났으면 이벤트 체크
-        if progress.turn_count >= 3 and progress.is_chatting and not progress.is_ended:
+
+        if progress.affinity >= 60:
+            print('이벤트 시작!')
+            # 다음 이벤트 조회
             next_event = CharacterEvent.query.filter_by(
                 char_id=character.id,
                 event_order=progress.current_step
             ).first()
 
             if next_event:
+                # 이벤트가 존재하면 트리거 발동
                 progress.is_chatting = False
                 trigger_event = True
-                progress.turn_count = 0  # 턴 초기화
+                progress.turn_count = 0
+            else:
+                # [디버깅용] 조건은 만족했으나 DB에 해당 단계의 이벤트가 없는 경우
+                print(f"⚠️ 알림: 호감도({progress.affinity}) 또는 턴 조건을 만족했으나, "
+                      f"DB에 event_order={progress.current_step}인 이벤트가 없습니다.")
+                # 만약 호감도가 60이 넘었는데 이벤트가 없다면? -> 엔딩일 수도 있음 (아래 로직 추가 가능)
 
+        # 6. 변경사항 최종 저장
         db.session.commit()
 
         return {
             'type': 'chat',
             'response': ai_response_text,
             'trigger_event': trigger_event,
-            'affinity': progress.affinity
+            'affinity': progress.affinity,
+            'profile_img_url': character.profile_img_url
         }
 
     @staticmethod
@@ -232,16 +250,21 @@ class ChatService:
         # 선택지에 따른 점수 계산
         score = 0
         choice_text = ""
+        choice_response = ""
 
         if choice_index == 1:
             score = event.choice_1_score
             choice_text = event.choice_1
+            choice_response = event.choice_1_response
         elif choice_index == 2:
             score = event.choice_2_score
             choice_text = event.choice_2
+            choice_response = event.choice_2_response
         elif choice_index == 3:
             score = event.choice_3_score
             choice_text = event.choice_3
+            choice_response = event.choice_3_response
+            progress.has_hidden = True
         else:
             raise ValueError("유효하지 않은 선택지입니다.")
 
@@ -253,13 +276,21 @@ class ChatService:
             user_id=user_id,
             char_name=char_name,
             sender='user',
-            message=f"[선택] {choice_text}"
+            message=choice_text,
         )
         db.session.add(user_log)
 
+        if choice_response:
+            ai_log = ChatLog(
+                user_id=user_id,
+                char_name=char_name,
+                sender='ai',
+                message=choice_response,  # [중요] 컬럼명을 message로 해야 에러가 안 남
+            )
+            db.session.add(ai_log)
+
         # 이벤트 후 처리 (다음 단계로 이동)
         progress.current_step += 1
-        progress.is_chatting = True  # 다시 채팅 모드로
         progress.turn_count = 0  # 턴 초기화
 
         # 엔딩 조건 체크 (호감도나 단계 기반)
@@ -272,7 +303,9 @@ class ChatService:
         return {
             'type': 'choice',
             'affinity': progress.affinity,
-            'message': '선택이 반영되었습니다. 대화를 계속하세요.'
+            'message': '선택이 반영되었습니다. 대화를 계속하세요.',
+            'response': choice_response,
+            'profile_img_url': character.profile_img_url
         }
 
     @staticmethod
@@ -297,7 +330,7 @@ class ChatService:
         if not event:
             # 이벤트가 없으면 엔딩일 수도 있고, 단순히 데이터가 없는 걸 수도 있음
             return {
-                'is_ended': False,
+                'is_ended': True,
                 'event': None,
                 'choices': [],
                 'message': '다음 이벤트가 없습니다.'
@@ -306,5 +339,6 @@ class ChatService:
         return {
             'is_ended': False,
             'event': event.to_dict(),
-            'choices': event.to_dict()['choices']
+            'choices': event.to_dict()['choices'],
+            'profile_img_url': character.profile_img_url
         }

@@ -12,14 +12,17 @@ class CharacterEvent(db.Model):
     # 선택지 1
     choice_1 = db.Column(db.String(255))
     choice_1_score = db.Column(db.Integer)
+    choice_1_response = db.Column(db.String(255))
 
     # 선택지 2
     choice_2 = db.Column(db.String(255))
     choice_2_score = db.Column(db.Integer)
+    choice_2_response = db.Column(db.String(255))
 
     # 선택지 3
     choice_3 = db.Column(db.String(255))
     choice_3_score = db.Column(db.Integer)
+    choice_3_response = db.Column(db.String(255))
 
     def to_dict(self):
         return {
@@ -28,9 +31,9 @@ class CharacterEvent(db.Model):
             'event_order': self.event_order,
             'event_text': self.event_text,
             'choices': [
-                {'text': self.choice_1, 'score': self.choice_1_score} if self.choice_1 else None,
-                {'text': self.choice_2, 'score': self.choice_2_score} if self.choice_2 else None,
-                {'text': self.choice_3, 'score': self.choice_3_score} if self.choice_3 else None,
+                {'text': self.choice_1, 'score': self.choice_1_score, 'reponses': self.choice_1_response} if self.choice_1 else None,
+                {'text': self.choice_2, 'score': self.choice_2_score, 'reponses': self.choice_2_response} if self.choice_2 else None,
+                {'text': self.choice_3, 'score': self.choice_3_score, 'reponses': self.choice_3_response} if self.choice_3 else None,
             ]
         }
 

@@ -1,82 +1,104 @@
-import google.generativeai as genai
+import os
+from openai import OpenAI
 from flask import current_app
 
 
-class GeminiService:
+class OpenRouterService:
     def __init__(self):
-        self.model = None
+        self.client = None
+        # 사용하고 싶은 모델 ID (OpenRouter 사이트에서 확인 가능)
+        self.model_id = "google/gemma-3-12b-it:free"
 
     def initialize(self):
-        """Gemini API 초기화"""
-        genai.configure(api_key=current_app.config['GEMINI_API_KEY'])
-        self.model = genai.GenerativeModel('gemini-pro')
+        """OpenRouter API 초기화"""
+        api_key = current_app.config.get('OPENROUTER_API_KEY')
+        if not api_key:
+            api_key = os.environ.get("OPENROUTER_API_KEY")
 
-    def generate_response(self, prompt: str) -> str:
+        # OpenRouter 전용 설정
+        self.client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=api_key,
+            # 선택 사항: OpenRouter 랭킹에 표시될 앱 정보 (없어도 무방)
+            default_headers={
+                "HTTP-Referer": "http://localhost:5000",  # 앱의 URL
+                "X-Title": "My Character Chat App",  # 앱의 이름
+            }
+        )
+
+    def generate_response(self, prompt: str, system_instruction: str = None) -> str:
         """AI 응답 생성"""
-        if not self.model:
+        if not self.client:
             self.initialize()
 
         try:
-            response = self.model.generate_content(prompt)
-            return response.text.strip()
-        except Exception as e:
-            raise Exception(f'AI 응답 생성 실패: {str(e)}')
+            messages = []
+            if system_instruction:
+                messages.append({"role": "system", "content": system_instruction})
 
-    def build_character_prompt(self, character, user_choice: str, affinity: int, chat_history: list) -> str:
-        """캐릭터 응답 프롬프트 생성"""
+            messages.append({"role": "user", "content": prompt})
+
+            # OpenAI 인터페이스와 동일하게 호출
+            completion = self.client.chat.completions.create(
+                model=self.model_id,
+                messages=messages,
+                max_tokens=300,
+            )
+
+            return completion.choices[0].message.content.strip()
+
+        except Exception as e:
+            print(f"🔥 OpenRouter Error: {e}")
+            return "잠시 통신 연결이 불안정해요. 다시 한번 말씀해 주시겠어요?"
+
+    def build_character_prompt(self, character, user_text: str, affinity: int, chat_history: list) -> str:
+        """캐릭터 응답 프롬프트 생성 (기존 로직 유지)"""
         history_text = '\n'.join([
             f"{'사용자' if log['sender'] == 'user' else character.name}: {log['message']}"
-            for log in chat_history[-5:]  # 최근 5개만
+            for log in chat_history[-10:]
         ])
 
         prompt = f"""
-당신은 "{character.name}"라는 캐릭터입니다.
+        당신은 "{character.name}"입니다. 아래의 규칙을 지켜 역할극에 참여하세요.
 
-[캐릭터 기본 정보]
-- 이름: {character.name}
-- 타이틀: {character.title}
-- 해시태그: {character.hashtags}
+        [캐릭터 정보]
+        - 이름: {character.name}
+        - 설정: {character.description}
+        - 성격/말투: {character.system_prompt}
+        - 현재 호감도: {affinity}/100
 
-[캐릭터 성격 및 설정]
-{character.system_prompt}
+        [최근 대화 기록]
+        {history_text}
 
-[현재 상황]
-{character.description}
+        [사용자 입력]
+        "{user_text}"
 
-[대화 기록]
-{history_text}
-
-[사용자의 선택]
-사용자가 "{user_choice}"를 선택했습니다.
-
-[현재 호감도: {affinity}]
-
-위 정보를 바탕으로 캐릭터 {character.name}의 성격과 특징을 완벽하게 반영하여 자연스럽고 몰입감 있는 반응을 생성해주세요.
-- 캐릭터의 말투, 성격, 특징을 정확히 표현하세요
-- 선택지에 대한 적절한 반응을 보여주세요
-- 현재 호감도와 상황을 고려하세요
-- 150자 이내로 간결하게 작성하세요
-- 마크다운 없이 순수 텍스트만 출력하세요
-"""
+        [규칙]
+        1. 캐릭터의 말투를 완벽하게 유지하며 한국어로만 대답하세요.
+        2. 150자 이내로 짧고 강렬하게 응답하세요.
+        3. 생각/지문은 평문으로, 실제 대사만 <strong> 태그로 감싸세요.
+        4. 줄바꿈은 <br> 태그를 사용하세요.
+        5. 이모티콘과 한자는 사용하지 마세요.
+        6. 인간처럼 자연스럽게 대화하세요.
+        """
         return prompt
 
     def build_ending_prompt(self, character, ending_content: str, affinity: int) -> str:
-        """엔딩 응답 프롬프트 생성"""
+        """엔딩 프롬프트"""
         prompt = f"""
-당신은 "{character.name}"라는 캐릭터입니다.
+        당신은 "{character.name}"입니다. 마지막 장면을 연기하세요.
 
-[엔딩 내용]
-{ending_content}
+        [엔딩 시나리오]
+        {ending_content}
 
-[최종 호감도: {affinity}]
+        [최종 호감도: {affinity}]
 
-위 엔딩 내용을 바탕으로 {character.name}의 성격을 반영한 마무리 대사를 작성해주세요.
-- 캐릭터의 특징과 말투를 유지하세요
-- 엔딩의 감정을 생생하게 표현하세요
-- 200자 이내로 작성하세요
-- 마크다운 없이 순수 텍스트만 출력하세요
-"""
+        - 200자 이내로 작성
+        - 대사만 <strong> 태그로 강조
+        - 줄바꿈은 <br> 사용
+        """
         return prompt
 
 
-gemini_service = GeminiService()
+# 서비스 교체
+gemini_service = OpenRouterService()

@@ -9,6 +9,9 @@ class Character(db.Model):
     title = db.Column(db.String(100))
     hashtags = db.Column(db.String(255))
     description = db.Column(db.Text)
+    info = db.Column(db.Text)
+    personality = db.Column(db.Text)
+    first_message = db.Column(db.Text)
     system_prompt = db.Column(db.Text)
     profile_img_url = db.Column(db.String(255))
 
@@ -42,6 +45,9 @@ class Character(db.Model):
         if include_full:
             data.update({
                 'description': self.description,
+                'info': self.info,
+                'personality': self.personality,
+                'first_message': self.first_message,
                 'system_prompt': self.system_prompt,
                 'success_end_title': self.success_end_title,
                 'success_end_content': self.success_end_content,

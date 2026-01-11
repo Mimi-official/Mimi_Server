@@ -67,67 +67,51 @@ def get_character(char_id):
     summary: 캐릭터 상세 정보 조회
     description: |
       특정 캐릭터의 상세 정보를 조회합니다.
-      로그인한 경우(Header에 토큰 포함 시), 사용자의 진행 상황(호감도 등)도 함께 반환됩니다.
+      로그인한 경우(쿠키 또는 헤더에 토큰 존재 시), 사용자의 진행 상황(호감도 등)도 함께 반환됩니다.
     parameters:
       - in: path
         name: char_id
         type: integer
         required: true
         description: 캐릭터 ID
-        example: 1
-      - in: header
-        name: Authorization
-        type: string
-        required: false
-        description: JWT 토큰 (Bearer eyJ...) - 선택사항
     responses:
       200:
         description: 조회 성공
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            data:
-              type: object
-              properties:
-                id:
-                  type: integer
-                name:
-                  type: string
-                system_prompt:
-                  type: string
-                user_progress:
-                  type: object
-                  nullable: true
-                  properties:
-                    affinity:
-                      type: integer
-                      example: 50
-                    current_step:
-                      type: integer
-                      example: 3
-                    is_ended:
-                      type: boolean
-                      example: false
       404:
-        description: 캐릭터를 찾을 수 없음
+        description: 캐릭터 없음
     """
     try:
-        # 선택적 인증 - 토큰이 있으면 사용자 정보 추출
         user_id = None
-        token = request.headers.get('Authorization')
+        token = None
 
+        # -----------------------------------------------------------
+        # 1. 쿠키에서 토큰 찾기 (우선순위 1)
+        # -----------------------------------------------------------
+        if 'access_token' in request.cookies:
+            token = request.cookies.get('access_token')
+
+        # -----------------------------------------------------------
+        # 2. 쿠키에 없으면 헤더에서 찾기 (우선순위 2 - 백업용)
+        # -----------------------------------------------------------
+        if not token and request.headers.get('Authorization'):
+            auth_header = request.headers.get('Authorization')
+            if "Bearer" in auth_header:
+                token = auth_header.split(' ')[1]
+            else:
+                token = auth_header
+
+        # -----------------------------------------------------------
+        # 3. 토큰이 있으면 유저 ID 추출 시도 (에러나면 무시)
+        # -----------------------------------------------------------
         if token:
             try:
-                if "Bearer" in token:
-                    token = token.split(' ')[1]
                 payload = decode_token(token)
                 user_id = payload.get('user_id')
-            except:
-                pass  # 토큰 에러나도 캐릭터 정보는 보여줌
+            except Exception:
+                # 토큰이 만료되었거나 잘못된 경우 -> 그냥 비로그인 유저로 취급
+                pass
 
+        # 4. 서비스 호출 (user_id가 있으면 진행상황 포함, 없으면 기본 정보만)
         character = CharacterService.get_character_by_id(char_id, user_id)
 
         return jsonify({
@@ -172,41 +156,6 @@ def get_ending(current_user):
               type: integer
               example: 95
               description: 최종 호감도 점수
-            has_hidden:
-              type: boolean
-              example: false
-              description: 히든 엔딩 조건 달성 여부
-    responses:
-      200:
-        description: 엔딩 조회 성공
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            ending_type:
-              type: string
-              description: 엔딩 타입 (success, fail, hidden, normal)
-              example: "success"
-            data:
-              type: object
-              properties:
-                title:
-                  type: string
-                  example: "해피 엔딩: 우리들의 시작"
-                content:
-                  type: string
-                  example: "그렇게 두 사람은 오래오래..."
-                image_url:
-                  type: string
-                  example: "https://example.com/images/ending/success_1.jpg"
-      400:
-        description: 요청 데이터 부족 (캐릭터 이름 누락 등)
-      404:
-        description: 캐릭터를 찾을 수 없음
-      500:
-        description: 서버 내부 에러
     """
     try:
         data = request.get_json()
@@ -216,17 +165,15 @@ def get_ending(current_user):
         if not char_name:
             return jsonify({'success': False, 'message': '캐릭터 이름이 필요합니다.'}), 400
 
-        affinity = int(data.get('affinity', 0))
-        has_hidden = data.get('has_hidden', False)
         user_id = current_user['user_id']
 
         # 서비스 호출
-        result = CharacterService.get_ending(user_id, char_name, affinity, has_hidden)
+        result = CharacterService.get_ending(user_id, char_name)
 
         return jsonify({
             'success': True,
-            'ending_type': result['ending_type'],
             'data': {
+                'ending_type': result['ending_type'],
                 'title': result['title'],
                 'content': result['content'],
                 'image_url': result['image_url']

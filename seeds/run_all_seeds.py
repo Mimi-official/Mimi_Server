@@ -1,12 +1,8 @@
 import sys
 import os
 
-# [핵심 수정 사항]
-# 현재 파일(run_all_seeds.py)의 부모 폴더(프로젝트 루트)를 파이썬 경로에 강제로 추가합니다.
-# 이렇게 해야 'from app import create_app'이 작동합니다.
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# 이제 import가 정상적으로 작동합니다
 from seed_wonbin import seed_wonbin
 from seed_jiyeon import seed_jiyeon
 from seed_minjae import seed_minjae

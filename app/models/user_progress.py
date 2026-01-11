@@ -8,8 +8,11 @@ class UserProgress(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     char_name = db.Column(db.String(50), nullable=False)
     affinity = db.Column(db.Integer, default=0)
+    turn_count = db.Column(db.Integer, default=0)
     current_step = db.Column(db.Integer, default=1)
     is_ended = db.Column(db.Boolean, default=False)
+    is_chatting = db.Column(db.Boolean, default=True)
+    has_hidden = db.Column(db.Boolean, default=False)
 
     __table_args__ = (
         db.UniqueConstraint('user_id', 'char_name', name='user_char_unique'),
@@ -21,6 +24,9 @@ class UserProgress(db.Model):
             'user_id': self.user_id,
             'char_name': self.char_name,
             'affinity': self.affinity,
+            'turn_count': self.turn_count,
             'current_step': self.current_step,
-            'is_ended': self.is_ended
+            'is_ended': self.is_ended,
+            'is_chatting': self.is_chatting,
+            'has_hidden': self.has_hidden,
         }
