@@ -63,6 +63,9 @@ def decode_token(token: str) -> dict:
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        if request.method == 'OPTIONS':
+            return '', 200
+
         token = None
 
         # ---------------------------------------------------------

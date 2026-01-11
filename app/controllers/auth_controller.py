@@ -208,7 +208,8 @@ def login():
             httponly=True,      # 자바스크립트 접근 불가 (보안)
             secure=False,       # 로컬(HTTP) 개발환경이면 False, 배포(HTTPS)는 True
             samesite='Lax',     # CSRF 보호용 (Lax 권장)
-            max_age=60*60*24*14    # 1일 (24시간)
+            max_age=60*60*24*14  ,
+            path='/',# 1일 (24시간)
         )
 
         return response, 200
@@ -261,10 +262,6 @@ def logout(current_user):
     try:
         # 쿠키 또는 헤더에서 토큰 추출 (블랙리스트 추가용)
         token = request.cookies.get('access_token')
-        if not token:
-             auth_header = request.headers.get('Authorization')
-             if auth_header and ' ' in auth_header:
-                 token = auth_header.split(' ')[1]
 
         # 서비스 로그아웃 처리 (토큰 블랙리스트 등)
         if token:
@@ -277,7 +274,7 @@ def logout(current_user):
         }))
 
         # 2. 쿠키 삭제 (만료시간을 과거로 설정하여 브라우저가 지우게 함)
-        response.delete_cookie('access_token')
+        response.delete_cookie('access_token', path='/', samesite='Lax', secure=False)
 
         return response, 200
 
@@ -351,7 +348,7 @@ def delete_account(current_user):
             'success': True,
             'message': result['message']
         }))
-        response.delete_cookie('access_token')
+        response.delete_cookie('access_token', path='/', samesite='Lax', secure=False)
 
         return response, 200
 

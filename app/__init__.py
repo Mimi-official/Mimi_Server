@@ -15,7 +15,7 @@ def create_app(config_class=Config):
     # - origins: 허용할 주소 (리스트 형태 권장)
     # - methods: OPTIONS를 반드시 포함해야 Preflight 에러가 안 납니다.
     CORS(app,
-         resources={r"/*": {
+         resources={r"/api/*": {
              "origins": app.config.get('CORS_ORIGINS', ["http://localhost:5173"]),
              "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
              "allow_headers": ["Content-Type", "Authorization"]
