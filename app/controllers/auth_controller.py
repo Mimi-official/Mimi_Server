@@ -1,188 +1,17 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response  # make_response 추가
 from app.services.auth_service import AuthService
 from app.utils.auth import token_required
 import traceback
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
-
-@auth_bp.route('/register', methods=['POST'])
-def register():
-    """회원가입
-    ---
-    tags:
-      - 인증 (Auth)
-    summary: 회원가입
-    description: 새로운 사용자를 등록합니다.
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          type: object
-          required:
-            - username
-            - nickname
-            - password
-          properties:
-            username:
-              type: string
-              example: testuser
-              description: 로그인 아이디 (3-20자)
-            nickname:
-              type: string
-              example: 테스트유저
-              description: 게임 내 닉네임 (2자 이상)
-            password:
-              type: string
-              example: password123
-              description: 비밀번호 (6자 이상)
-    responses:
-      201:
-        description: 회원가입 성공
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            message:
-              type: string
-              example: 회원가입이 완료되었습니다.
-            data:
-              type: object
-              properties:
-                id:
-                  type: integer
-                  example: 1
-                username:
-                  type: string
-                  example: testuser
-                nickname:
-                  type: string
-                  example: 테스트유저
-      400:
-        description: 유효성 검사 실패
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: false
-            message:
-              type: string
-              example: 이미 존재하는 아이디입니다.
-    """
-    try:
-        data = request.get_json()
-
-        username = data.get('username')
-        nickname = data.get('nickname')
-        password = data.get('password')
-
-        if not username or not nickname or not password:
-            return jsonify({
-                'success': False,
-                'message': '모든 필드를 입력해주세요.'
-            }), 400
-
-        user = AuthService.register(username, nickname, password)
-
-        return jsonify({
-            'success': True,
-            'message': '회원가입이 완료되었습니다.',
-            'data': user
-        }), 201
-
-    except ValueError as e:
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 400
-
-    except Exception as e:
-        print("\n\n🔥 회원가입 에러 🔥")
-        traceback.print_exc()
-        print("🔥 ----------------------------- 🔥\n\n")
-
-        return jsonify({
-            'success': False,
-            'message': '서버 오류가 발생했습니다.'
-        }), 500
-
+# ... (register 함수는 그대로 두셔도 됩니다) ...
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    """로그인
-    ---
-    tags:
-      - 인증 (Auth)
-    summary: 로그인
-    description: 사용자 인증 후 JWT 토큰을 발급합니다.
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          type: object
-          required:
-            - username
-            - password
-          properties:
-            username:
-              type: string
-              example: testuser
-              description: 로그인 아이디
-            password:
-              type: string
-              example: password123
-              description: 비밀번호
-    responses:
-      200:
-        description: 로그인 성공
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            message:
-              type: string
-              example: 로그인에 성공했습니다.
-            data:
-              type: object
-              properties:
-                token:
-                  type: string
-                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                  description: JWT 인증 토큰
-                user:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      example: 1
-                    username:
-                      type: string
-                      example: testuser
-                    nickname:
-                      type: string
-                      example: 테스트유저
-      401:
-        description: 인증 실패
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: false
-            message:
-              type: string
-              example: 아이디 또는 비밀번호가 일치하지 않습니다.
-    """
+    """로그인 (쿠키 설정 추가됨)"""
     try:
         data = request.get_json()
-
         username = data.get('username')
         password = data.get('password')
 
@@ -192,147 +21,95 @@ def login():
                 'message': '아이디와 비밀번호를 입력해주세요.'
             }), 400
 
+        # 1. 서비스 로직 수행
         result = AuthService.login(username, password)
+        token = result['token'] # 토큰 분리
 
-        return jsonify({
+        # 2. 응답 객체 생성 (JSON 데이터 포함)
+        response = make_response(jsonify({
             'success': True,
             'message': '로그인에 성공했습니다.',
             'data': result
-        }), 200
+        }))
+
+        # 3. 쿠키 설정 (핵심!)
+        response.set_cookie(
+            'access_token',     # 쿠키 이름
+            token,              # 토큰 값
+            httponly=True,      # 자바스크립트 접근 불가 (보안)
+            secure=False,       # 로컬(HTTP) 개발환경이면 False, 배포(HTTPS)는 True
+            samesite='Lax',     # CSRF 보호용 (Lax 권장)
+            max_age=60*60*24*14    # 1일 (24시간)
+        )
+
+        return response, 200
 
     except ValueError as e:
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 401
+        return jsonify({'success': False, 'message': str(e)}), 401
     except Exception as e:
         print("\n\n🔥 로그인 에러 🔥")
         traceback.print_exc()
-        print("🔥 ----------------------------- 🔥\n\n")
-
-        return jsonify({
-            'success': False,
-            'message': '서버 오류가 발생했습니다.'
-        }), 500
+        return jsonify({'success': False, 'message': '서버 오류가 발생했습니다.'}), 500
 
 
 @auth_bp.route('/logout', methods=['POST'])
 @token_required
 def logout(current_user):
-    """로그아웃
-    ---
-    tags:
-      - 인증 (Auth)
-    security:
-      - Bearer: []
-    responses:
-      200:
-        description: 로그아웃 성공
-      401:
-        description: 인증 실패
-    """
+    """로그아웃 (쿠키 삭제 추가됨)"""
     try:
-        # [수정된 부분] Bearer가 있든 없든 안전하게 토큰 추출
-        auth_header = request.headers.get('Authorization')
-        if ' ' in auth_header:
-            token = auth_header.split(' ')[1]
-        else:
-            token = auth_header
+        # 쿠키 또는 헤더에서 토큰 추출 (블랙리스트 추가용)
+        token = request.cookies.get('access_token')
+        if not token:
+             auth_header = request.headers.get('Authorization')
+             if auth_header and ' ' in auth_header:
+                 token = auth_header.split(' ')[1]
 
-        AuthService.logout(token)
+        # 서비스 로그아웃 처리 (토큰 블랙리스트 등)
+        if token:
+            AuthService.logout(token)
 
-        return jsonify({
+        # 1. 응답 객체 생성
+        response = make_response(jsonify({
             'success': True,
             'message': '로그아웃되었습니다.'
-        }), 200
+        }))
+
+        # 2. 쿠키 삭제 (만료시간을 과거로 설정하여 브라우저가 지우게 함)
+        response.delete_cookie('access_token')
+
+        return response, 200
 
     except Exception as e:
-        print(f"\n\n🔥 로그아웃 에러 🔥\n{str(e)}\n🔥 ----------------------------- 🔥\n")
-        return jsonify({
-            'success': False,
-            'message': '로그아웃 처리 중 오류가 발생했습니다.'
-        }), 500
+        print(f"\n\n🔥 로그아웃 에러 🔥\n{str(e)}")
+        return jsonify({'success': False, 'message': '오류 발생'}), 500
 
 
 @auth_bp.route('/delete', methods=['DELETE'])
 @token_required
 def delete_account(current_user):
-    """회원 탈퇴
-    ---
-    tags:
-      - 인증 (Auth)
-    summary: 회원 탈퇴
-    description: 사용자 계정과 모든 관련 데이터를 삭제합니다. (복구 불가)
-    security:
-      - Bearer: []
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          type: object
-          required:
-            - password
-          properties:
-            password:
-              type: string
-              example: password123
-              description: 현재 비밀번호 (본인 확인용)
-    responses:
-      200:
-        description: 회원 탈퇴 성공
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            message:
-              type: string
-              example: 회원 탈퇴가 완료되었습니다.
-      400:
-        description: 비밀번호 오류
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: false
-            message:
-              type: string
-              example: 비밀번호가 일치하지 않습니다.
-      401:
-        description: 인증 실패
-    """
+    """회원 탈퇴 (쿠키 삭제 추가됨)"""
     try:
         data = request.get_json()
         password = data.get('password')
 
         if not password:
-            return jsonify({
-                'success': False,
-                'message': '비밀번호를 입력해주세요.'
-            }), 400
+            return jsonify({'success': False, 'message': '비밀번호를 입력해주세요.'}), 400
 
         user_id = current_user['user_id']
         result = AuthService.delete_account(user_id, password)
 
-        return jsonify({
+        # 회원 탈퇴 후에도 쿠키를 지워야 함
+        response = make_response(jsonify({
             'success': True,
             'message': result['message']
-        }), 200
+        }))
+        response.delete_cookie('access_token')
+
+        return response, 200
 
     except ValueError as e:
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 400
+        return jsonify({'success': False, 'message': str(e)}), 400
     except Exception as e:
         print("\n\n🔥 회원 탈퇴 에러 🔥")
         traceback.print_exc()
-        print("🔥 ----------------------------- 🔥\n\n")
-
-        return jsonify({
-            'success': False,
-            'message': '서버 오류가 발생했습니다.'
-        }), 500
+        return jsonify({'success': False, 'message': '서버 오류'}), 500
