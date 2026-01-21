@@ -201,13 +201,24 @@ def login():
             'data': result
         }))
 
+        is_production = os.getenv('FLASK_ENV') == 'production'
+
+        if is_production:
+            # 배포 환경 (Vercel): HTTPS 필수, Cross-Site 허용
+            cookie_secure = True
+            cookie_samesite = 'None'
+        else:
+            # 로컬 환경: HTTP 허용, 같은 도메인(Lax)
+            cookie_secure = False
+            cookie_samesite = 'Lax'
+
         # 3. 쿠키 설정 (핵심!)
         response.set_cookie(
             'access_token',     # 쿠키 이름
             token,              # 토큰 값
             httponly=True,      # 자바스크립트 접근 불가 (보안)
-            secure=False,       # 로컬(HTTP) 개발환경이면 False, 배포(HTTPS)는 True
-            samesite='Lax',     # CSRF 보호용 (Lax 권장)
+            secure=cookie_secure,       # 로컬(HTTP) 개발환경이면 False, 배포(HTTPS)는 True
+            samesite=cookie_samesite,     # CSRF 보호용 (Lax 권장)
             max_age=60*60*24*14  ,
             path='/',# 1일 (24시간)
         )
@@ -273,8 +284,19 @@ def logout(current_user):
             'message': '로그아웃되었습니다.'
         }))
 
+        is_production = os.getenv('FLASK_ENV') == 'production'
+
+        if is_production:
+            # 배포 환경 (Vercel): HTTPS 필수, Cross-Site 허용
+            cookie_secure = True
+            cookie_samesite = 'None'
+        else:
+            # 로컬 환경: HTTP 허용, 같은 도메인(Lax)
+            cookie_secure = False
+            cookie_samesite = 'Lax'
+
         # 2. 쿠키 삭제 (만료시간을 과거로 설정하여 브라우저가 지우게 함)
-        response.delete_cookie('access_token', path='/', samesite='Lax', secure=False)
+        response.delete_cookie('access_token', path='/', samesite=cookie_samesite, secure=cookie_secure)
 
         return response, 200
 
@@ -348,7 +370,19 @@ def delete_account(current_user):
             'success': True,
             'message': result['message']
         }))
-        response.delete_cookie('access_token', path='/', samesite='Lax', secure=False)
+
+        is_production = os.getenv('FLASK_ENV') == 'production'
+
+        if is_production:
+            # 배포 환경 (Vercel): HTTPS 필수, Cross-Site 허용
+            cookie_secure = True
+            cookie_samesite = 'None'
+        else:
+            # 로컬 환경: HTTP 허용, 같은 도메인(Lax)
+            cookie_secure = False
+            cookie_samesite = 'Lax'
+
+        response.delete_cookie('access_token', path='/', samesite=cookie_samesite, secure=cookie_secure)
 
         return response, 200
 
