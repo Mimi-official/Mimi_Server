@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.services.chat_service import ChatService
 from app.utils.auth import token_required
+from urllib import parse
 import traceback
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/api/chat')
@@ -245,9 +246,10 @@ def get_chat_state(current_user, char_name):
     """
     try:
         user_id = current_user['user_id']
+        decoded_char_name = parse.unquote(char_name)
 
-        progress = ChatService.get_or_create_progress(user_id, char_name)
-        chat_history = ChatService.get_chat_history(user_id, char_name, limit=50)
+        progress = ChatService.get_or_create_progress(user_id, decoded_char_name)
+        chat_history = ChatService.get_chat_history(user_id, decoded_char_name, limit=50)
 
         return jsonify({
             'success': True,
