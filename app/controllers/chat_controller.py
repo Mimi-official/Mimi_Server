@@ -332,7 +332,8 @@ def get_current_event(current_user, char_name):
     """
     try:
         user_id = current_user['user_id']
-        result = ChatService.get_current_event(user_id, char_name)
+        decoded_char_name = parse.unquote(char_name)
+        result = ChatService.get_current_event(user_id, decoded_char_name)
 
         return jsonify({
             'success': True,
@@ -410,13 +411,13 @@ def send_message(current_user, char_name):
     try:
         user_id = current_user['user_id']
         data = request.get_json()
-
+        decoded_char_name = parse.unquote(char_name)
         message = data.get('message')
         choice_index = data.get('choice_index')
 
         if message:
             # 1. 자유 채팅
-            result = ChatService.chat_with_character(user_id, char_name, message)
+            result = ChatService.chat_with_character(user_id, decoded_char_name, message)
             return jsonify({
                 'success': True,
                 'data': result
@@ -424,7 +425,7 @@ def send_message(current_user, char_name):
 
         elif choice_index:
             # 2. 선택지 선택
-            result = ChatService.handle_choice(user_id, char_name, int(choice_index))
+            result = ChatService.handle_choice(user_id, decoded_char_name, int(choice_index))
             return jsonify({
                 'success': True,
                 'data': result
