@@ -1,11 +1,15 @@
 from app import create_app
-from app.models import db
+from flask_cors import CORS  # 반드시 import
 
 app = create_app()
 
-if __name__ == '__main__':
-    CORS(app,
-         resources={r"/api/*": {"origins": ["http://localhost:5173", "https://mimi-client.vercel.app"]}},
-         supports_credentials=True
-    )
-    app.run(debug=True, host='0.0.0.0', port=5000)
+# Vercel이 실행하는 app 객체에 CORS 설정을 직접 주입
+CORS(app,
+    resources={r"/api/*": {
+        "origins": [
+            "http://localhost:5173",
+            "https://mimi-client.vercel.app"
+        ]
+    }},
+    supports_credentials=True
+)
