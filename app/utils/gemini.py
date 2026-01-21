@@ -22,7 +22,7 @@ class OpenRouterService:
             # 선택 사항: OpenRouter 랭킹에 표시될 앱 정보 (없어도 무방)
             default_headers={
                 "HTTP-Referer": "http://localhost:5000",  # 앱의 URL
-                "X-Title": "My Character Chat App",  # 앱의 이름
+                "X-Title": "MiMi",  # 앱의 이름
             }
         )
 
