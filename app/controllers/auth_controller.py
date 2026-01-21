@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response  # make_response 추가
 from app.services.auth_service import AuthService
 from app.utils.auth import token_required
-import traceback
+import traceback, os
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
