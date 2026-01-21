@@ -1,6 +1,9 @@
 """
 Swagger 설정
 """
+import os
+
+is_production = os.getenv('FLASK_ENV') == 'production'
 
 swagger_config = {
     "headers": [],
@@ -28,9 +31,9 @@ swagger_template = {
             "email": "support@example.com"
         }
     },
-    "host": "localhost:5000",
+    "host": "mimi-server.vercel.app" if is_production else "localhost:5000",
     "basePath": "/",
-    "schemes": ["http"],
+    "schemes": ["https"] if is_production else ["http"],
     "securityDefinitions": {
         "Bearer": {
             "type": "apiKey",

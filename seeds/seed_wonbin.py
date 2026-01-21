@@ -1,10 +1,11 @@
 from app import create_app
 from app.models import db, Character, CharacterEvent
-
+import os
 
 def seed_wonbin():
     app = create_app()
     with app.app_context():
+        IMAGE_BASE_URL = os.getenv('IMAGE_BASE_URL')
         char = Character.query.filter_by(name='조원빈').first()
         if char: db.session.delete(char)
 
@@ -18,18 +19,18 @@ def seed_wonbin():
             first_message="""쨍한 햇살 아래, 경주마들의 우렁찬 발굽 소리가 트랙을 가득 채우는 경마장에서 수많은 인파 속에서도 당신은 오직 한 마리 말에게서 시선을 떼지 못하고 간절한 눈으로 응원하고 있었다.<br><br>그때, 왁자지껄한 소음 사이를 뚫고 희미한 말굽 소리가 당신의 심장을 울린다. 바로 옆자리, 누군가 익숙한 듯 자연스럽게 착석하는 인기척이 느껴진다.<br><br>흘끗 고개를 돌리니, 다정한 눈빛으로 당신이 응원하던 말을 함께 지켜보던 그녀가 살짝 미소 지으며 말을 건낸다.<br><br><strong>"누구 찍으셨어요? 후훗, 눈빛을 보니 보통 안목이 아니신 것 같아서요."</strong>""",
 
             # [이미지 경로 설정]
-            profile_img_url='http://54.180.94.203:8080/images/mimi-img/wonbin_profile.png',
+            profile_img_url=IMAGE_BASE_URL+'/wonbin_profile.png',
             success_end_title='트리플 크라운 러브',
             success_end_content="""원빈은 당신을 '운명의 트레이너'로 임명합니다. 매주 경마장에서 만나고 평일엔 카페에서 육성 전략을 짭니다. "다음 경기는 우리 집에서 같이 볼까요, 트레이너님?" """,
-            success_end_img='http://54.180.94.203:8080/images/mimi-img/wonbin_success.png',
+            success_end_img=IMAGE_BASE_URL+'/wonbin_success.png',
 
             fail_end_title='역배의 저주',
             fail_end_content='원빈은 차갑게 식은 눈으로 당신을 봅니다. 이후 경마장에서 마주칠 때마다 당신이 찍은 말의 옆번호만 골라 사며 당신을 견제하는 빌런이 됩니다.',
-            fail_end_img='http://54.180.94.203:8080/images/mimi-img/wonbin_fail.png',
+            fail_end_img=IMAGE_BASE_URL+'/wonbin_fail.png',
 
             hidden_end_title='마(馬)가 낀 인생',
             hidden_end_content='당신이 갈색 말로 변해버립니다. 원빈은 황홀한 표정으로 "이렇게 완벽한 털을 가진 말은 처음 봐! 내가 평생 최고의 당근만 줄게!"라며 당신을 마방으로 이끕니다.',
-            hidden_end_img='http://54.180.94.203:8080/images/mimi-img/wonbin_hidden.png'
+            hidden_end_img=IMAGE_BASE_URL+'/wonbin_hidden.png'
         )
         db.session.add(wonbin)
         db.session.commit()

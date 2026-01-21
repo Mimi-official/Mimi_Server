@@ -12,17 +12,17 @@ class CharacterEvent(db.Model):
     # 선택지 1
     choice_1 = db.Column(db.String(255))
     choice_1_score = db.Column(db.Integer)
-    choice_1_response = db.Column(db.String(255))
+    choice_1_response = db.Column(db.Text)
 
     # 선택지 2
     choice_2 = db.Column(db.String(255))
     choice_2_score = db.Column(db.Integer)
-    choice_2_response = db.Column(db.String(255))
+    choice_2_response = db.Column(db.Text)
 
     # 선택지 3
     choice_3 = db.Column(db.String(255))
     choice_3_score = db.Column(db.Integer)
-    choice_3_response = db.Column(db.String(255))
+    choice_3_response = db.Column(db.Text)
 
     def to_dict(self):
         return {

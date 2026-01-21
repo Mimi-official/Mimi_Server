@@ -1,10 +1,11 @@
 from app import create_app
 from app.models import db, Character, CharacterEvent
-
+import os
 
 def seed_seohyun():
     app = create_app()
     with app.app_context():
+        IMAGE_BASE_URL = os.getenv('IMAGE_BASE_URL')
         char = Character.query.filter_by(name='강서현').first()
         if char: db.session.delete(char)
 
@@ -19,18 +20,18 @@ def seed_seohyun():
             first_message="""복도에서 급하게 뛰어오던 서현과 부딪힌 당신. 날카로운 말이 나오려던 찰나, 여리고 순한 눈매의 서현이 울상을 지으며 당신의 책을 주워준다.<br><br><strong>"헉!! 미안해, 괜찮아?! 내가 애니 신곡 듣다가 급해서 잘 못 봤어... 어디 다친 데는 없니?"</stong>""",
 
             # [이미지 경로 설정]
-            profile_img_url='http://54.180.94.203:8080/images/mimi-img/seohyeon_profile.png',
+            profile_img_url=IMAGE_BASE_URL+'/seohyeon_profile.png',
             success_end_title='천사의 안식처: 181cm의 품 안에서',
             success_end_content="""당신은 그녀의 장신에 숨겨진 여린 마음과, 애니메이션을 향한 뜨거운 열정을 모두 포용했습니다. 서현은 더 이상 "죄송합니다"라는 방어 기제 뒤에 숨지 않습니다. 오직 당신 앞에서만 한정판 굿즈를 자랑하며 아이처럼 웃고, 때로는 당신의 어깨에 머리를 기대며 자신의 고민을 털어놓습니다. 학교 복도에서 마주칠 때면, 그녀는 모두가 보는 앞에서 당신의 손을 꽉 잡으며 세상에서 가장 당당하고 아름다운 미소를 지어 보입니다.""",
-            success_end_img='http://54.180.94.203:8080/images/mimi-img/seohyeon_success.png',
+            success_end_img=IMAGE_BASE_URL+'/seohyeon_success.png',
 
             fail_end_title='멀어진 뒷모습: 닿지 못한 사과',
             fail_end_content="""당신이 그녀의 취향을 무시하거나 차갑게 대할 때마다, 서현의 마음속 유리 벽에는 금이 가고 있었습니다. 결국 어느 날, 그녀는 평소보다 더 예의 바르고 딱딱한 말투로 당신을 밀어냅니다. "그동안 감사했습니다. 하지만 저와는... 세계가 너무 다른 것 같네요." 뒤늦게 그녀가 좋아하던 한정판 포스터를 구해 달려가 보지만, 복도 끝으로 멀어지는 그녀의 181cm 뒷모습은 그 어느 때보다 높고 차갑게만 느껴집니다.""",
-            fail_end_img='http://54.180.94.203:8080/images/mimi-img/seohyeon_fail.png',
+            fail_end_img=IMAGE_BASE_URL+'/seohyeon_fail.png',
 
             hidden_end_title='샤갈의 실체: 천사의 가면이 깨질 때',
             hidden_end_content="""당신이 그녀의 한계점을 건드린 순간, 교실 안의 공기가 얼어붙습니다. 늘 "미안해"를 연발하던 가녀린 목소리는 온데간데없고, 그녀는 책상을 내리치며 포효합니다. "샤갈!!!!!!!!!!" 181cm의 압도적인 피지컬에서 뿜어져 나오는 위압감 앞에 당신은 숨이 턱 막힙니다. 그녀는 서늘한 눈빛으로 당신을 내려다보며 짓이겨진 굿즈를 던집니다. "내 인생에서 영구 제명이야. 꺼져." 당신은 여린 줄만 알았던 천사의 진짜 '악마적' 이중성을 뼈저리게 실감하게 됩니다.""",
-            hidden_end_img='http://54.180.94.203:8080/images/mimi-img/seohyeon_hidden.png'
+            hidden_end_img=IMAGE_BASE_URL+'/seohyeon_hidden.png'
         )
         db.session.add(seohyun)
         db.session.commit()

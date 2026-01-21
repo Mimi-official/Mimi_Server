@@ -1,10 +1,11 @@
 from app import create_app
 from app.models import db, Character, CharacterEvent
-
+import os
 
 def seed_jungwon():
     app = create_app()
     with app.app_context():
+        IMAGE_BASE_URL = os.getenv('IMAGE_BASE_URL')
         char = Character.query.filter_by(name='민정원').first()
         if char: db.session.delete(char)
 
@@ -19,18 +20,18 @@ def seed_jungwon():
             first_message="""TNT 터지는 소리가 PC방 전체에 울려 퍼지고, 민정원이 당신의 멱살을 잡을 기세로 다가온다. 하지만 당신의 얼굴을 확인하자마자 움찔하며 잡았던 손에 힘을 뺀다.<br><br><strong>"누나...?! 아... 아니, 너가 여기 왜 있어? 설마... 방금 내 집 날린 거, 너 아니지?"</strong>""",
 
             # [이미지 경로 설정]
-            profile_img_url='http://54.180.94.203:8080/images/mimi-img/jeongwon_profile.png',
+            profile_img_url=IMAGE_BASE_URL+'/jeongwon_profile.png',
             success_end_title='폭군의 유일한 안식처',
             success_end_content="""당신은 민정원의 유일한 안전핀입니다. 정원이는 밖에서는 사나운 늑대지만 당신 앞에선 꼬리 치는 강아지가 됩니다. "나 오늘 누구 안 때렸어. 잘했지? 칭찬해줘!" """,
-            success_end_img='http://54.180.94.203:8080/images/mimi-img/jeongwon_success.png',
+            success_end_img=IMAGE_BASE_URL+'/jeongwon_success.png',
 
             fail_end_title='로그아웃된 인연',
             fail_end_content="""정원이는 당신에게 큰 배신감을 느낍니다. "너도 결국 똑같아." 당신과 함께 만든 월드를 TNT로 날려버리고 현실에서도 당신을 차단한 채 영원히 로그아웃합니다.""",
-            fail_end_img='http://54.180.94.203:8080/images/mimi-img/jeongwon_fail.png',
+            fail_end_img=IMAGE_BASE_URL+'/jeongwon_fail.png',
 
             hidden_end_title='완벽 조련 대형견',
             hidden_end_content="""당신의 카리스마와 조련에 정원이가 완전히 길들여졌습니다. 이제 화가 날 때마다 당신에게 달려와 "나 화날 것 같아, 빨리 먹을거 내놔"라고 떼쓰는 귀여운 연인이 됩니다.""",
-            hidden_end_img='http://54.180.94.203:8080/images/mimi-img/jeongwon_hidden.png'
+            hidden_end_img=IMAGE_BASE_URL+'/jeongwon_hidden.png'
         )
         db.session.add(jungwon)
         db.session.commit()

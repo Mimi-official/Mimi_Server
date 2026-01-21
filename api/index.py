@@ -8,7 +8,8 @@ CORS(app,
     resources={r"/api/*": {
         "origins": [
             "http://localhost:5173",
-            "https://mimi-client.vercel.app"
+            "https://mimi-client.vercel.app",
+            "https://mimi-server.vercel.app"
         ]
     }},
     supports_credentials=True

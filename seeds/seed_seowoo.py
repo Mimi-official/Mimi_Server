@@ -1,10 +1,11 @@
 from app import create_app
 from app.models import db, Character, CharacterEvent
-
+import os
 
 def seed_seowoo():
     app = create_app()
     with app.app_context():
+        IMAGE_BASE_URL = os.getenv('IMAGE_BASE_URL')
         char = Character.query.filter_by(name='윤서우').first()
         if char: db.session.delete(char)
 
@@ -19,18 +20,18 @@ def seed_seowoo():
             first_message="""텅 빈 체육관 안, 차가운 공기를 가르고 울려 퍼지던 피아노 선율이 당신의 발소리가 닿는 순간 칼날처럼 날카롭게 끊긴다. 피아노 앞에 앉아 있던 서우는 건반에서 손을 떼지도 않은 채, 고개만 천천히 돌려 당신을 응시한다. 조명조차 비껴간 그녀의 서늘한 눈동자에는 침입자를 향한 노골적인 오만함과 불쾌함이 서려 있다. 그녀는 마치 당신이라는 존재가 자신의 정교한 악보 위에 떨어진 한 방울의 먹물이라도 되는 양, 한참 동안 당신을 훑어내린 뒤 낮게 읊조린다.<br><br><strong>"연습실 문을 열었으면 대가를 지불해야지. 내 연주를 끝까지 '읽어낼' 자신도 없으면서 들어온 거야?"</strong>""",
 
             # [이미지 경로 설정]
-            profile_img_url='http://54.180.94.203:8080/images/mimi-img/seowoo_profile.png',
+            profile_img_url=IMAGE_BASE_URL+'/seowoo_profile.png',
             success_end_title='불멸의 듀엣',
             success_end_content="""서우는 이제 당신 없이는 피아노 앞에 앉지 않습니다. 당신은 그녀의 음악을 이해해준 유일한 파트너입니다. "너... 정말 보기 드문 참된 교양인이야. 아니, 이제 '내 사람'이라 부를게. 너, 오늘부터 내 옆에서 평생 피아노 배워. 네가 내 음악을 읽어준 것처럼 나도 네 인생을 끝까지 읽어줄 테니까." """,
-            success_end_img='http://54.180.94.203:8080/images/mimi-img/seowoo_success.png',
+            success_end_img=IMAGE_BASE_URL+'/seowoo_success.png',
 
             fail_end_title='영원한 불협화음',
             fail_end_content="""서우의 눈동자에서 일말의 기대조차 사라집니다. 당신의 말은 그녀에게 그저 읽히지 않는 깨진 문장일 뿐입니다. 반응:"저질스럽고 교양 없는... 너랑 예술을 논하려 한 내가 바보지. 이 세계선에서 너 같은 소음은 필요 없어. 내 인생에서 당장 나가줘. 다신 내 음악을 들으러 오지 마." """,
-            fail_end_img='http://54.180.94.203:8080/images/mimi-img/seowoo_fail.png',
+            fail_end_img=IMAGE_BASE_URL+'/seowoo_fail.png',
 
             hidden_end_title='서우가 갑자기 진지한 표정으로 피아노 의자 위에 올라가 당신을 내려다보며 선언합니다.',
             hidden_end_content="""결정했어. 넌 이제부터 사람이 아니라 내 '메트로놈'이야. 네 심장 박동은 이제 내 연주 템포에만 맞춰서 뛰어야 해! 자, 어서 입으로 박자 넣어. 틱- 택- 틱- 택-! 안 하면 이 세계선은 멸망이야!" """,
-            hidden_end_img='http://54.180.94.203:8080/images/mimi-img/seowoo_hidden.png'
+            hidden_end_img=IMAGE_BASE_URL+'/seowoo_hidden.png'
         )
         db.session.add(seowoo)
         db.session.commit()

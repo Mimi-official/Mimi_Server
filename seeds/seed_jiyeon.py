@@ -1,10 +1,11 @@
 from app import create_app
 from app.models import db, Character, CharacterEvent
-
+import os
 
 def seed_jiyeon():
     app = create_app()
     with app.app_context():
+        IMAGE_BASE_URL=os.getenv('IMAGE_BASE_URL')
         char = Character.query.filter_by(name='한지연').first()
         if char: db.session.delete(char)
 
@@ -19,18 +20,18 @@ def seed_jiyeon():
             first_message="""세계 테트리스 대회장, 우승컵을 거머쥐고 무대를 내려오는 지연의 눈 앞에 느닷없이 들이밀어진 떨리는 손. 그 손에 들린 싸인지와 펜을 지연이 세상에서 가장 날카로운 눈으로 바라보며 입을 연다. <strong>"음, 싸인이요? 해드릴게요. 이름이...?"</strong>""",
 
             # [이미지 경로 설정]
-            profile_img_url='http://54.180.94.203:8080/images/mimi-img/jiyeon_profile.png',
+            profile_img_url=IMAGE_BASE_URL+'/jiyeon_profile.png',
             success_end_title='심판의 복도 위 파트너',
             success_end_content="""지연과 사귀게 된 당신. 이제 두 사람은 매일 피시방에서 메갈로바니아를 들으며 테트리스 랭킹을 정복합니다. "우리 나중에 데이트할 때 샌즈 후드티 맞춰 입고 올래요? 겁.나.멋.집.니.다." """,
-            success_end_img='http://54.180.94.203:8080/images/mimi-img/jiyeon_success.png',
+            success_end_img=IMAGE_BASE_URL+'/jiyeon_success.png',
 
             fail_end_title='테트리스로 개털림',
             fail_end_content="""지연은 당신을 무시하며 테트리스로 압살합니다. "아... 그거 그렇게 하는 거 아닌데. 당신 실력으론 샌즈의 첫 번째 공격도 못 피할 거예요. 저리 가요." """,
-            fail_end_img='http://54.180.94.203:8080/images/mimi-img/jiyeon_fail.png',
+            fail_end_img=IMAGE_BASE_URL+'/jiyeon_fail.png',
 
             hidden_end_title='샌즈 모독죄',
             hidden_end_content="""지연이 세상에서 가장 차가운 표정으로 당신을 내려다봅니다. "테트리스를 향한 사랑과 샌즈에 대한 예의가 부족한 사람은 혐오스러워요." 그녀는 당신을 완벽한 '쓰레기 블록' 취급하며 인생에서 영구 삭제해버립니다.""",
-            hidden_end_img='http://54.180.94.203:8080/images/mimi-img/jiyeon_hidden.png'
+            hidden_end_img=IMAGE_BASE_URL+'/jiyeon_hidden.png'
         )
         db.session.add(jiyeon)
         db.session.commit()
