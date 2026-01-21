@@ -97,6 +97,8 @@ class ChatService:
     @staticmethod
     def get_chat_history(user_id: int, char_name: str, limit: int = 10) -> list:
         """채팅 기록 조회 (프로필 이미지 포함)"""
+        print('유저 아이디 :', user_id)
+        print('캐릭터 이름 :', char_name)
 
         # 1. 채팅 로그 조회
         logs = ChatLog.query.filter_by(
