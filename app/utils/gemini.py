@@ -7,7 +7,7 @@ class OpenRouterService:
     def __init__(self):
         self.client = None
         # 사용하고 싶은 모델 ID (OpenRouter 사이트에서 확인 가능)
-        self.model_id = "meta-llama/llama-3.2-3b-instruct:free"
+        self.model_id = "google/gemini-3.1-flash-lite-preview"
 
     def initialize(self):
         """OpenRouter API 초기화"""
