@@ -7,7 +7,7 @@ class OpenRouterService:
     def __init__(self):
         self.client = None
         # 사용하고 싶은 모델 ID (OpenRouter 사이트에서 확인 가능)
-        self.model_id = "google/gemma-3-27b-it:free"
+        self.model_id = "openai/gpt-oss-120b:free"
 
     def initialize(self):
         """OpenRouter API 초기화"""
