@@ -28,7 +28,7 @@ class Config:
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
     # CORS
-    CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5173"]
+    CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5173", "https://mimi-client.vercel.app"]
 
     #STATIC
     STATIC_URL = '/static/'
