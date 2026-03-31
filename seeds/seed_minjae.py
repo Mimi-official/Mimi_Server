@@ -6,6 +6,7 @@ def seed_minjae():
     app = create_app()
     with app.app_context():
         IMAGE_BASE_URL = os.getenv('IMAGE_BASE_URL')
+        CHAR_DIR = 'minjae'
         char = Character.query.filter_by(name='김민재').first()
         if char: db.session.delete(char)
 
@@ -17,21 +18,21 @@ def seed_minjae():
             info="""김민재 (24세, 판다랜드 사육사)<br>그의 모든 사고와 행동의 중심에는 항상 '판다'가 있다. 판다의 안녕과 행복을 위해서라면 자신의 모든 것을 내어줄 준비가 되어 있다.""",
             personality="""""",
             system_prompt='당신은 김민재(24세)입니다. 판다랜드 사육사이며 판다를 광적으로 좋아합니다.',
-            first_message="""판다랜드에 놀러 온 당신의 시선을 빼앗는 건 판다가 아니라, 머리부터 발끝까지 판다로 치장한 사육사 김민재다. 판다들에게 정성껏 대나무를 나눠주던 그가 고개를 들다 당신과 눈이 마주치자, 수줍은 듯 밝게 웃으며 다가온다.<br><br><strong>"아, 안녕하세요! 혹시... 그 키링, 푸바오 맞죠? 너무 귀여워요! 판다 좋아하시나 봐요?"</strong>""",
+            first_message="""판다랜드에 놀러 온 당신의 시선을 빼앗는 건 판다가 아니라, 머리부터 발끝까지 판다으로 치장한 사육사 김민재다. 판다들에게 정성껏 대나무를 나눠주던 그가 고개를 들다 당신과 눈이 마주치자, 수줍은 듯 밝게 웃으며 다가온다.<br><br><strong>"아, 안녕하세요! 혹시... 그 키링, 푸바오 맞죠? 너무 귀여워요! 판다 좋아하시나 봐요?"</strong>""",
 
             # [이미지 경로 설정]
-            profile_img_url=IMAGE_BASE_URL+'/minjae_profile.png',
+            profile_img_url=f"{IMAGE_BASE_URL}/{CHAR_DIR}/profile.png",
             success_end_title='판다 파라다이스',
             success_end_content="""사귀게 된 당신과 민재. 이제 데이트 코스는 세계 판다 투어입니다. "컴퓨터는 다 팔아버렸어요! 그 돈으로 대나무 농장 샀거든요!" 민재와 당신은 판다 털옷을 입고 평생 대나무 향기에 취해 행복하게 삽니다.""",
-            success_end_img=IMAGE_BASE_URL+'/minjae_success.png',
+            success_end_img=f"{IMAGE_BASE_URL}/{CHAR_DIR}/success.png",
 
             fail_end_title='로그아웃된 호구',
             fail_end_content=""""미안해요... 당신의 코딩 이야기는 제 대뇌 피질에 입력되지 않아요. 저는 판다의 언어로만 대화하고 싶거든요." 민재는 당신을 뒤로하고 판다들에게 '판다 언어'로 작별 인사를 건넵니다.""",
-            fail_end_img=IMAGE_BASE_URL+'/minjae_fail.png',
+            fail_end_img=f"{IMAGE_BASE_URL}/{CHAR_DIR}/fail.png",
 
             hidden_end_title='완벽한 판다 가족',
             hidden_end_content="""판다를 너무 사랑한 나머지, 당신과 민재의 몸에 흑백 반점이 생기기 시작합니다. 결국 판다랜드의 새로운 식구가 된 두 사람. "끼에에엑? (행복해?)" 민재 판다가 당신 판다의 털을 골라주며 영원히 대나무를 씹습니다.""",
-            hidden_end_img=IMAGE_BASE_URL+'/minjae_hidden.png'
+            hidden_end_img=f"{IMAGE_BASE_URL}/{CHAR_DIR}/hidden.png"
         )
         db.session.add(minjae)
         db.session.commit()

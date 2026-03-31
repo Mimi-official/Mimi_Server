@@ -29,3 +29,14 @@ class Config:
 
     # CORS
     CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5173"]
+
+    #STATIC
+    STATIC_URL = '/static/'
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'static'),
+    ]
+
+    # 배포 시 파일들이 모이는 곳 (Vercel 빌드용)
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

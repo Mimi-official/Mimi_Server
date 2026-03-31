@@ -1,13 +1,15 @@
 import sys
 import os
 
+from seeds.seed_jeongwon import seed_jeongwon
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from seed_wonbin import seed_wonbin
 from seed_jiyeon import seed_jiyeon
 from seed_minjae import seed_minjae
 from seed_seohyun import seed_seohyun
-from seed_jungwon import seed_jungwon
+from seed_jeongwon import seed_jeongwon
 from seed_seowoo import seed_seowoo
 
 print("============== 데이터 초기화 시작 ==============")
@@ -26,7 +28,7 @@ print("[4/6] 강서현 데이터 생성 중...")
 seed_seohyun()
 
 print("[5/6] 민정원 데이터 생성 중...")
-seed_jungwon()
+seed_jeongwon()
 
 print("[6/6] 윤서우 데이터 생성 중...")
 seed_seowoo()
